@@ -166,11 +166,13 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         </select>
       </label>
       <label>さらに上乗せ（%）<input id="margin" inputmode="decimal"></label>
+      <label>1回にかかる時間（秒）<input id="secs" inputmode="numeric"></label>
       <label>時速（1時間あたり）<input id="rate" inputmode="numeric"></label>
       <label>休み（7時間）の開始
         <select id="restStart"></select>
       </label>
     </div>
+    <p class="note" style="margin-top:6px">1回25,000人として、「1回にかかる時間」から時速を出します。曲の長さ（星の数だけ アニメVer. MASTERは2分05秒＝125秒）に、曲と曲のあいだの時間を足して入れてください。時速を直接入れても大丈夫です。</p>
     <label class="busy">遊べない予定（1行に1つ、例 2026-11-05 18:00-21:00）<textarea id="busy" rows="3"></textarea></label>
     <p class="note" style="margin-top:6px">ファン数が増えない7時間の休みは、初日と最終日にはなく、そのあいだの毎日に入る前提で計算しています。</p>
     <p class="note" style="margin-top:8px">狙う順位とアイドルごとの時速は、カードを開いて変えます。アイドルごとの時速がなければ、ここの時速を使います。</p>
@@ -522,7 +524,10 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   put("#basis", S.basis); put("#margin", S.margin); put("#rate", full(S.rate)); put("#restStart", S.restStart); put("#busy", S.busy);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
   $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
-  $("#rate").addEventListener("change", e => { S.rate = num(e.target.value); e.target.value = full(S.rate); save(); render(); });
+  const PER = 25000, secsOf = r => r ? Math.round(PER * 3600 / r) : "";
+  put("#secs", secsOf(num(S.rate)));
+  $("#rate").addEventListener("change", e => { S.rate = num(e.target.value); e.target.value = full(S.rate); put("#secs", secsOf(S.rate)); save(); render(); });
+  $("#secs").addEventListener("change", e => { const v = num(e.target.value); if (v > 0) { S.rate = Math.round(PER * 3600 / v); put("#rate", full(S.rate)); } save(); render(); });
   $("#restStart").addEventListener("change", e => { S.restStart = +e.target.value; save(); render(); });
   $("#busy").addEventListener("change", e => { S.busy = e.target.value; save(); render(); });
   $("#reload").addEventListener("click", load);
