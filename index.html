@@ -115,6 +115,8 @@ dialog::backdrop{background:rgba(20,30,55,.5)}
 .facts .v{font-size:1.15rem}
 .facts .v.safe{color:var(--no)}
 .myrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem}
+.meas{font-size:.8rem;color:var(--ink-2)}
+.use{font:inherit;font-size:.76rem;font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:1px 10px;margin-left:4px;cursor:pointer}
 .myrow input{width:9.5em;text-align:right;font-family:var(--lat);font-weight:700}
 .legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
@@ -165,7 +167,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       <label>時速（1時間あたり）<input id="rate" inputmode="numeric"></label>
       <label>1日に遊べる時間<input id="hpd" inputmode="decimal"></label>
     </div>
-    <p class="note" style="margin-top:8px">狙う順位は、アイドルのカードを開いて切り替えます。</p>
+    <p class="note" style="margin-top:8px">狙う順位とアイドルごとの時速は、カードを開いて変えます。アイドルごとの時速がなければ、ここの時速を使います。</p>
   </details>
   <p class="note">ボーダーは、Discordに流れてくるBotの投稿を15分ごとに記録したものです。予測は、今のボーダーに、過去2回（2周年・2.5周年）で同じ経過率から最終までに伸びた倍率の中央値をかけています。安全ラインは、選んだ基準の倍率に上乗せを足したものです。「前回」は、2.5周年の同じ経過率と比べた倍率です。ユニットの色は近い色を使っています。非公式のファンツールです。</p>
 </main>
@@ -195,7 +197,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
 
   // ---------- settings ----------
   const defaults = () => ({ basis: "max", margin: 0, rate: 750000, hpd: 17,
-    target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {} });
+    target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {}, rateBy: {}, hist: {} });
   let S = defaults();
   try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) S = Object.assign(defaults(), s, { target: Object.assign(defaults().target, s.target || {}) }); } catch (e) {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
@@ -257,6 +259,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       const r = { name, tgt, my: num(S.my[name]), status: tgt === "off" ? "off" : "na", cmp: [] };
       const rk = tgt === "off" ? "100" : tgt, ci = COL[rk];
       r.rk = rk;
+      r.rateOwn = num(S.rateBy[name]); r.rate = r.rateOwn || num(S.rate);
+      const h = S.hist[name] || [];
+      if (h.length >= 2) {
+        const [a, b] = h.slice(-2), dh = (b[0] - a[0]) / 3600000, ds = b[1] - a[1];
+        if (dh >= 1 / 6 && ds > 0) r.meas = { rate: ds / dh, ds, dh };
+      }
       const pts = ev ? (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]) : [];
       r.pts = pts.map(p => [p[1], p[ci], p[0]]);
       const lp = pts[pts.length - 1];
@@ -276,7 +284,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
             r.pred = r.border * r.med; r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
           }
         }
-        if (r.safe != null) { r.need = Math.max(0, r.safe - (r.my || 0)); r.hours = S.rate ? r.need / S.rate : null; }
+        if (r.safe != null) { r.need = Math.max(0, r.safe - (r.my || 0)); r.hours = r.rate ? r.need / r.rate : null; }
       }
       return r;
     });
@@ -349,7 +357,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     if (r.border == null) { fig = `<span class="k">前回最終</span>${man((r.cmp[0] || {}).final)}`; aux = ""; }
     else if (r.status === "off") { fig = `<span class="k">今</span>${man(r.border)}`; aux = ""; }
     else if (r.status === "ok") { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `自分 ${man(r.my)}`; }
-    else if (r.my != null) { fig = `<span class="k">あと</span>${man(r.need)}`; aux = `${hrs(r.hours)}`; }
+    else if (r.my != null) { fig = `<span class="k">あと</span>${man(r.need)}`; aux = `${hrs(r.hours)}${r.rateOwn ? "（この子の時速）" : ""}`; }
     else { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `今 ${man(r.border)}`; }
     const c = r.cmp[0];
     if (r.border != null && c && c.ratio) aux += `${aux ? "、" : ""}前回の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>`;
@@ -380,7 +388,10 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
           <div><span class="k">最終までの倍率</span><span class="v n">${r.lo != null ? `${xr(r.lo)}〜${r.hi.toFixed(2)}` : r.final ? "確定" : "—"}</span></div>
         </div>
         <div class="myrow"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
-          <span>${r.need != null ? (r.need > 0 ? `あと <b class="n">${man(r.need)}</b>（${hrs(r.hours)}）` : "安全ラインを超えています") : ""}</span></div>
+          <span>${r.need != null ? (r.need > 0 ? `あと <b class="n">${man(r.need)}</b>、<b class="n">${hrs(r.hours)}</b>` : "安全ラインを超えています") : ""}</span></div>
+        <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(num(S.rate)))}（全体）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
+          ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
+            : `<span class="meas">スコアを2回以上入れると、その間の時速が出ます</span>`}</div>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
           <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
@@ -460,8 +471,16 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   $("#sheet").addEventListener("click", e => {
     if (e.target === $("#sheet") || e.target.closest("[data-close]")) { $("#sheet").close(); return; }
     const t = e.target.closest("[data-tgt]"); if (t) { S.target[openName] = t.dataset.tgt; save(); render(); }
+    const u = e.target.closest("[data-use]"); if (u) { S.rateBy[openName] = +u.dataset.use; save(); render(); }
   });
-  $("#sheet").addEventListener("change", e => { if (e.target.id === "myIn") { S.my[openName] = num(e.target.value); save(); e.target.blur(); render(); } });
+  $("#sheet").addEventListener("change", e => {
+    if (e.target.id === "myIn") {
+      const v = num(e.target.value); S.my[openName] = v;
+      if (v != null) { const h = S.hist[openName] = S.hist[openName] || []; if (!h.length || h[h.length - 1][1] !== v) h.push([Date.now(), v]); if (h.length > 30) h.shift(); }
+      save(); e.target.blur(); render();
+    }
+    if (e.target.id === "rateIn") { S.rateBy[openName] = num(e.target.value); save(); e.target.blur(); render(); }
+  });
   $("#sheet").addEventListener("close", () => { openName = null; render(); });
 
   // ---------- events ----------
