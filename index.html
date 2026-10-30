@@ -7,156 +7,167 @@
 <title>シャニソン ボーダー速報</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Quicksand:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500&family=Raleway:wght@300;500;600&family=Noto+Serif+JP:wght@700&display=swap">
 <style>
+/* ハミング (Fontworks) is used where it is installed; it is not served from here. */
+@font-face{font-family:"Humming B";src:local("FOT-HummingStd-B"),local("FOT-ハミング Std B"),local("FOT-Humming Std B"),local("HummingStd-B"),local("ハミング Std B"),local("Humming Std B"),local("A-OTF-HummingStd-B")}
 :root{
   color-scheme:light;
-  --page:#f3f8fd; --paper:#ffffff; --ink:#1e2a46; --ink-2:#5b6787; --rule:#dce7f3;
-  --sky:#4aa8e0; --p-pink:#f9cfe0; --p-yellow:#fbe9a6; --p-sky:#c4e6f8;
-  --no:#d6455d; --no-bg:#fdeef1; --plan:#3a72cf; --plan-bg:#ecf2fd; --ok:#239a6d; --ok-bg:#e8f7f0; --wait:#8c96ad;
-  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
-  --jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
-  --lat:"Quicksand","Zen Maru Gothic",system-ui,sans-serif;
+  --ink:#002841; --ink-2:#45709e; --ink-3:#7e98b4; --rule:rgba(0,40,65,.13);
+  --paper:rgba(255,255,255,.86); --solid:#fff; --field:#f3f9fd;
+  --prism:linear-gradient(to right,#b4e6fa 0,#f1deff 25%,#f5bde5 50%,#f1deff 75%,#b4e6fa 100%);
+  --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --wait:#a9bacb;
+  --s1:#2f6fc0; --s2:#e2708c; --s3:#2a9d8f;
+  --jp:"Humming B","FOT-ハミング Std B","ハミング Std B","Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
+  --en:"Raleway","Humming B","Zen Maru Gothic",sans-serif;
+  --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
 }
-@media (prefers-color-scheme:dark){:root{
-  color-scheme:dark;
-  --page:#141a2b; --paper:#1d2538; --ink:#eef2fb; --ink-2:#a6b0c8; --rule:#2e3850;
-  --sky:#6cbcec; --p-pink:#5a3346; --p-yellow:#5a4f2a; --p-sky:#24445e;
-  --no:#ff8496; --no-bg:#3a2130; --plan:#8fb0f2; --plan-bg:#23304d; --ok:#5fd3a4; --ok-bg:#183a30; --wait:#8590a8;
-  --s1:#3987e5; --s2:#d95926; --s3:#199e70;}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--page);color:var(--ink);font:15px/1.6 var(--jp)}
-.n{font-family:var(--lat);font-variant-numeric:tabular-nums lining-nums;font-weight:700}
-
-/* header: the one place the prism colors appear */
-.hero{background:linear-gradient(120deg,var(--p-sky) 0%,var(--p-pink) 48%,var(--p-yellow) 100%);padding:20px 0 26px;border-bottom-left-radius:28px;border-bottom-right-radius:28px}
+body{margin:0;color:var(--ink);font:15px/1.65 var(--jp);background:#cdeaf8}
+body::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse 55% 22% at 18% 26%,rgba(255,255,255,.6),transparent 70%),
+    radial-gradient(ellipse 45% 18% at 88% 52%,rgba(255,255,255,.5),transparent 70%),
+    radial-gradient(ellipse 60% 20% at 30% 84%,rgba(255,255,255,.55),transparent 70%),
+    linear-gradient(180deg,#5db6e5 0%,#8fcdef 32%,#c4e7f8 70%,#e9f6fd 100%)}
+.n{font-family:var(--en);font-variant-numeric:lining-nums tabular-nums;font-weight:600;letter-spacing:.01em}
 .in{max-width:920px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
-.hero .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.hero h1{margin:0;font-weight:900;font-size:1.55rem;letter-spacing:.04em;line-height:1.25}
-.hero h1 small{display:block;font-size:.8rem;font-weight:500;letter-spacing:.02em;color:var(--ink-2)}
-.refresh{font:inherit;font-size:.82rem;font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer;white-space:nowrap}
-.refresh:focus-visible,.card:focus-visible,button:focus-visible{outline:2.5px solid var(--sky);outline-offset:2px}
-.sumline{margin:14px 0 0;display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:4px 22px}
-.sumline div{display:flex;flex-direction:column}
-.sumline .k{font-size:.72rem;color:var(--ink-2)}
-.sumline .v{font-size:1.35rem;line-height:1.2}
-.sumline .v small{font-size:.8rem;font-weight:600;margin-left:1px}
-@media (max-width:460px){.sumline{grid-template-columns:repeat(2,auto);gap:6px 28px}}
-.updated{margin:10px 0 0;font-size:.78rem;color:var(--ink-2)}
 
-main.in{display:flex;flex-direction:column;gap:22px;padding-top:18px;padding-bottom:44px}
-.notice{border-radius:14px;padding:10px 14px;font-size:.86rem;background:var(--paper);border:1.5px solid var(--rule)}
-.notice.warn{border-color:var(--no);color:var(--no)}
+/* header */
+.hero{padding:26px 0 8px}
+.hero .row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.hero h1{margin:0;line-height:1}
+.hero h1 b{display:block;font:300 2.4rem/1 var(--en);letter-spacing:.14em;text-transform:uppercase;
+  background:linear-gradient(180deg,#002841,#45709e);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 small{display:block;margin-top:8px;font:700 .72rem/1.4 var(--serif);letter-spacing:.32em;color:var(--ink-2)}
+button{font-family:inherit}
+.refresh,.mini,.use,.close{font-size:.8rem;color:var(--ink);background:var(--prism);border:1px solid rgba(255,255,255,.6);padding:6px 16px;cursor:pointer;white-space:nowrap;letter-spacing:.08em}
+.refresh:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--ink-2);outline-offset:2px}
+.sumline{margin:18px 0 0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper)}
+.sumline div{display:flex;flex-direction:column;padding:9px 12px;border-left:1px solid var(--rule)}
+.sumline div:first-child{border-left:none}
+.sumline .k{font-size:.7rem;color:var(--ink-2);letter-spacing:.06em}
+.sumline .v{font-size:1.4rem;line-height:1.2}
+.sumline .v small{font-size:.75rem;margin-left:2px}
+@media (max-width:460px){.sumline{grid-template-columns:repeat(2,1fr)}.sumline div:nth-child(3){border-left:none}.sumline div:nth-child(n+3){border-top:1px solid var(--rule)}}
+.updated{margin:8px 0 0;font-size:.74rem;color:var(--ink-2);text-align:right}
 
-/* unit sections */
-.unit{--u:#888;display:flex;flex-direction:column;gap:10px}
-.ribbon{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;padding:6px 16px 6px max(14px,env(safe-area-inset-left));background:var(--u);color:var(--ut,#fff);border-radius:0 999px 999px 0;margin-left:calc(-1 * max(14px, env(safe-area-inset-left)));width:fit-content;max-width:calc(100% + 14px)}
-.ribbon b{font-family:var(--lat);font-weight:700;font-size:1.12rem;letter-spacing:.02em}
-.ribbon span{font-size:.74rem;opacity:.92}
-.ribbon .alert{background:#fff;color:#c23a50;border-radius:999px;padding:0 8px;font-weight:700;font-size:.72rem;opacity:1}
-.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bottom:48px}
+.notice{padding:9px 14px;font-size:.84rem;background:var(--paper)}
+.notice.warn{color:var(--no);border-left:3px solid var(--no)}
 
-/* cards: the 100th card is wide and rounder; 500th cards are compact */
-.card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:grid;grid-template-columns:1fr;align-items:center;gap:2px 8px;
-  background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:9px 10px 9px 13px;min-width:0;overflow:hidden}
-.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--wait)}
-.card.no{background:var(--no-bg);border-color:color-mix(in srgb,var(--no) 35%,var(--rule))} .card.no::before{background:var(--no)}
+/* units */
+.unit{--u:#888;display:flex;flex-direction:column;gap:8px}
+.ribbon{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px;padding-bottom:5px;border-bottom:2px solid var(--u)}
+.ribbon b{font:500 1.15rem/1.2 var(--en);letter-spacing:.1em;color:var(--ink)}
+.ribbon span{font:700 .66rem/1.4 var(--serif);letter-spacing:.24em;color:var(--ink-2)}
+.ribbon .alert{font:700 .7rem/1.4 var(--jp);letter-spacing:.04em;color:#fff;background:var(--no);padding:1px 8px}
+.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+
+/* cards */
+.card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:grid;grid-template-columns:1fr;align-items:center;gap:1px 8px;
+  background:var(--paper);padding:9px 10px 9px 14px;min-width:0;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--wait)}
+.card.no{background:var(--no-bg)} .card.no::before{background:var(--no)}
 .card.plan::before{background:var(--plan)}
 .card.ok{background:var(--ok-bg)} .card.ok::before{background:var(--ok)}
-.card.off{opacity:.45}
-.card.top{grid-template-columns:1fr auto;grid-column:span 2;border-radius:20px;padding:12px 14px 12px 17px;border-color:color-mix(in srgb,var(--u) 45%,var(--rule))}
-.card.top::before{width:7px}
+.card.off{opacity:.5}
+.card.top{grid-template-columns:1fr auto;grid-column:span 2;padding:12px 14px 12px 18px;background:rgba(255,255,255,.93)}
+.card.top::before{width:5px}
+.card.top.no{background:var(--no-bg)} .card.top.ok{background:var(--ok-bg)}
 .who{display:flex;align-items:center;gap:7px;min-width:0}
 .line2{grid-column:1;display:flex;justify-content:space-between;align-items:center;gap:6px}
-.who b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card.top .who b{font-size:1.1rem}
-.rank{font-family:var(--lat);font-weight:700;font-size:.7rem;border-radius:999px;padding:0 7px;white-space:nowrap;border:1.5px solid var(--ink-2);color:var(--ink-2)}
-.card.top .rank{background:var(--ink);border-color:var(--ink);color:var(--paper);font-size:.74rem}
-.state{font-size:.72rem;font-weight:700;white-space:nowrap}
-.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.na,.state.off{color:var(--wait)}
-.fig{grid-column:1;font-size:1.15rem;line-height:1.25}
-.card.top .fig{font-size:1.5rem}
-.fig .k{font-family:var(--jp);font-size:.72rem;font-weight:500;color:var(--ink-2);margin-right:4px}
-.aux{grid-column:1;font-size:.74rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.aux .up{color:var(--no);font-weight:700} .aux .down{color:var(--ok);font-weight:700}
-.face{flex:none;width:30px;height:30px;font-size:.9rem;border-radius:50%;position:relative;overflow:hidden;
-  background:color-mix(in srgb,var(--u) 18%,var(--paper));border:2px solid var(--u);display:grid;place-items:center;font-weight:900;color:var(--u)}
-.card.top .face{grid-column:2;grid-row:1/span 4;width:76px;height:76px;font-size:1.8rem;border-width:2.5px}
+.who b{font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.top .who b{font-size:1.12rem}
+.rank{font:600 .68rem/1.5 var(--en);letter-spacing:.06em;padding:0 6px;white-space:nowrap;border:1px solid var(--ink-3);color:var(--ink-2)}
+.card.top .rank{background:var(--ink);border-color:var(--ink);color:#fff}
+.state{font-size:.72rem;white-space:nowrap;letter-spacing:.04em}
+.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.na,.state.off{color:var(--ink-3)}
+.fig{grid-column:1;font-size:1.15rem;line-height:1.3}
+.card.top .fig{font-size:1.55rem}
+.fig .k{font-family:var(--jp);font-size:.7rem;font-weight:normal;color:var(--ink-2);margin-right:4px;letter-spacing:0}
+.aux{grid-column:1;font-size:.72rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aux .up{color:var(--no)} .aux .down{color:var(--ok)}
+.face{flex:none;width:30px;height:30px;font-size:.88rem;border-radius:50%;position:relative;overflow:hidden;
+  background:color-mix(in srgb,var(--u) 16%,#fff);border:1.5px solid var(--u);display:grid;place-items:center;color:var(--u)}
+.card.top .face{grid-column:2;grid-row:1/span 4;width:76px;height:76px;font-size:1.8rem;border-width:2px}
 .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 12%}
 
-details.box{background:var(--paper);border:1.5px solid var(--rule);border-radius:16px;padding:10px 14px}
-details.box>summary{cursor:pointer;font-weight:700;font-size:.9rem}
+/* panels */
+details.box{background:var(--paper);padding:12px 16px}
+details.box>summary{cursor:pointer;font-size:.92rem;letter-spacing:.06em}
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
-.busy{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--ink-2);margin-top:10px}
-.busy textarea{font:inherit;font-size:.85rem;color:var(--ink);background:var(--page);border:1.5px solid var(--rule);border-radius:10px;padding:6px 9px;resize:vertical}
-.form label{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--ink-2)}
-input,select{font:inherit;color:var(--ink);background:var(--page);border:1.5px solid var(--rule);border-radius:10px;padding:6px 9px}
+.form label,.busy{display:flex;flex-direction:column;gap:3px;font-size:.74rem;color:var(--ink-2)}
+.busy{margin-top:12px}
+input,select,textarea{font:inherit;font-size:.9rem;color:var(--ink);background:var(--field);border:1px solid var(--rule);border-radius:0;padding:6px 9px}
+.busy textarea{resize:vertical}
 ol{margin:6px 0 0;padding-left:1.4em;font-size:.9rem}
-.sub{font-size:.8rem;font-weight:700;margin:14px 0 0}
+.note{font-size:.74rem;color:var(--ink-2);margin:6px 0 0;line-height:1.7}
+.foot{font-size:.72rem;color:var(--ink-2);text-align:center;letter-spacing:.06em}
+.sub{font:700 .68rem/1.4 var(--serif);letter-spacing:.24em;color:var(--ink-2);margin:18px 0 0}
 .songhead,.songrow{display:grid;grid-template-columns:minmax(0,1fr) 4.6em 6.6em auto;gap:6px;align-items:center}
-.songhead{font-size:.72rem;color:var(--ink-2);margin-top:10px}
+.songhead{font-size:.7rem;color:var(--ink-2);margin-top:10px}
 .songrow{margin-top:6px}
 .songrow input{min-width:0;width:100%}
-.songrow input[data-f=len],.songrow input[data-f=fans]{text-align:right;font-family:var(--lat);font-weight:700}
+.songrow input[data-f=len],.songrow input[data-f=fans]{text-align:right;font-family:var(--en);font-weight:600}
+.mini{font-size:.74rem;padding:3px 12px}
+.mini:disabled{opacity:.35;cursor:default}
 @media (max-width:560px){
   .songhead,.songrow{grid-template-columns:4.6em 6.6em 1fr}
   .songhead span:first-child{display:none}
-  .songrow{border-top:1.5px solid var(--rule);padding-top:8px;margin-top:8px}
+  .songrow{border-top:1px solid var(--rule);padding-top:8px;margin-top:8px}
   .songrow input[data-f=name]{grid-column:1/-1}
   .songrow .mini{justify-self:end}
 }
-.mini{font:inherit;font-size:.76rem;font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:3px 11px;cursor:pointer;white-space:nowrap}
-.mini:disabled{opacity:.35;cursor:default}
 table.pick{border-collapse:collapse;width:100%;margin-top:8px;font-size:.8rem;table-layout:fixed}
 table.pick th,table.pick td{padding:3px 2px;border-bottom:1px solid var(--rule)}
-table.pick thead th{font-size:.7rem;color:var(--ink-2);font-weight:500;text-align:left}
-table.pick tbody th{text-align:left;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:4px solid var(--u,#888);padding-left:6px}
+table.pick thead th{font-size:.7rem;color:var(--ink-2);font-weight:normal;text-align:left}
+table.pick tbody th{text-align:left;font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--u,#888);padding-left:6px}
 table.pick col.nm{width:5.2em}
 table.pick select,.songpick select{width:100%;min-width:0;font-size:.78rem;padding:4px 5px;text-overflow:ellipsis}
-table.pick select.set{border-color:var(--plan);color:var(--plan);font-weight:700}
+table.pick select.set{border-color:var(--ink-2);background:#e6f0fa}
 .songpick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.songpick label{display:flex;flex-direction:column;gap:3px;font-size:.74rem;color:var(--ink-2);min-width:0}
+.songpick label{display:flex;flex-direction:column;gap:3px;font-size:.72rem;color:var(--ink-2);min-width:0}
 @media (max-width:460px){.songpick{grid-template-columns:1fr}}
 .split{font-size:.82rem;color:var(--ink-2);margin:0;line-height:1.8}
-.split b{color:var(--ink)}
-.note{font-size:.76rem;color:var(--ink-2);margin:0;line-height:1.7}
+.split b{color:var(--ink);font-weight:600}
 
 /* detail sheet */
-dialog{border:none;padding:0;background:var(--paper);color:var(--ink);width:min(640px,100%);max-height:92vh;border-radius:24px;margin:auto}
-@media (max-width:640px){dialog{margin:auto 0 0;border-radius:24px 24px 0 0;max-width:100%}}
-dialog::backdrop{background:rgba(20,30,55,.5)}
+dialog{border:none;padding:0;background:var(--solid);color:var(--ink);width:min(640px,100%);max-height:92vh;margin:auto}
+@media (max-width:640px){dialog{margin:auto 0 0;max-width:100%}}
+dialog::backdrop{background:rgba(0,40,65,.45)}
 .sheet{display:flex;flex-direction:column}
-.sheet-top{--u:#888;background:linear-gradient(120deg,var(--u),color-mix(in srgb,var(--u) 55%,#fff));color:#fff;padding:16px 16px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.sheet-top{--u:#888;background:linear-gradient(120deg,var(--u),color-mix(in srgb,var(--u) 50%,#fff));color:#fff;padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
 .sheet-top .face{width:64px;height:64px;border-color:#fff;background:rgba(255,255,255,.25);color:#fff;font-size:1.6rem}
-.sheet-top h3{margin:0;font-size:1.3rem;font-weight:900;line-height:1.2}
-.sheet-top h3 small{display:block;font-family:var(--lat);font-size:.8rem;font-weight:600;opacity:.95}
-.close{font:inherit;font-size:.82rem;font-weight:700;background:rgba(255,255,255,.95);color:#1e2a46;border:none;border-radius:999px;padding:5px 14px;cursor:pointer}
+.sheet-top h3{margin:0;font-size:1.3rem;font-weight:normal;line-height:1.25;letter-spacing:.06em}
+.sheet-top h3 small{display:block;font:500 .8rem/1.4 var(--en);letter-spacing:.12em;opacity:.95}
+.close{background:#fff;border:none}
 .sheet-body{padding:14px 16px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
-.seg button{font:inherit;font-size:.8rem;font-weight:700;border:none;padding:4px 12px;background:transparent;color:var(--ink);cursor:pointer}
-.seg button.on{background:var(--ink);color:var(--paper)}
+.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg button{font-size:.8rem;border:none;padding:4px 12px;background:transparent;color:var(--ink);cursor:pointer;letter-spacing:.04em}
+.seg button.on{background:var(--ink);color:#fff}
 .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 14px}
 @media (max-width:460px){.facts{grid-template-columns:repeat(2,1fr)}}
-.facts div{display:flex;flex-direction:column;border-bottom:1.5px solid var(--rule);padding-bottom:4px}
-.facts .k{font-size:.72rem;color:var(--ink-2)}
+.facts div{display:flex;flex-direction:column;border-bottom:1px solid var(--rule);padding-bottom:4px}
+.facts .k{font-size:.7rem;color:var(--ink-2)}
 .facts .v{font-size:1.15rem}
 .facts .v.safe{color:var(--no)}
 .myrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem}
 .meas{font-size:.8rem;color:var(--ink-2)}
-.use{font:inherit;font-size:.76rem;font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:1px 10px;margin-left:4px;cursor:pointer}
-.myrow input{width:9.5em;text-align:right;font-family:var(--lat);font-weight:700}
-.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--ink-2)}
+.use{font-size:.74rem;padding:1px 10px;margin-left:4px}
+.myrow input{width:9.5em;text-align:right;font-family:var(--en);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.74rem;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
 .legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid currentColor}
 .chart{position:relative}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
-.chart text{fill:var(--ink-2);font-size:10px;font-family:var(--lat);font-weight:600}
-.tip{position:absolute;pointer-events:none;background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:5px 9px;font-size:.76rem;white-space:nowrap;display:none}
+.chart text{fill:var(--ink-2);font-size:10px;font-family:var(--en);font-weight:500}
+.tip{position:absolute;pointer-events:none;background:#fff;border:1px solid var(--rule);padding:5px 9px;font-size:.76rem;white-space:nowrap;display:none}
 table.cmp{border-collapse:collapse;width:100%;font-size:.86rem}
-table.cmp th,table.cmp td{padding:6px;border-bottom:1.5px solid var(--rule);text-align:right;white-space:nowrap}
-table.cmp th{font-size:.72rem;color:var(--ink-2);font-weight:500}
+table.cmp th,table.cmp td{padding:6px;border-bottom:1px solid var(--rule);text-align:right;white-space:nowrap}
+table.cmp th{font-size:.7rem;color:var(--ink-2);font-weight:normal}
 table.cmp th:first-child,table.cmp td:first-child{text-align:left}
 td.up{color:var(--no)} td.down{color:var(--ok)}
 @media (prefers-reduced-motion:no-preference){dialog[open]{animation:rise .22s ease-out}@keyframes rise{from{transform:translateY(24px);opacity:.4}}}
@@ -166,8 +177,8 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
 <header class="hero">
   <div class="in">
     <div class="row">
-      <h1>ボーダー速報<small id="eventLine">読み込み中…</small></h1>
-      <button class="refresh" id="reload" type="button">更新する</button>
+      <h1><b>Border</b><small id="eventLine">読み込み中</small></h1>
+      <button class="refresh" id="reload" type="button">更新</button>
     </div>
     <div class="sumline" id="stats"></div>
     <p class="updated" id="updated"></p>
@@ -176,55 +187,45 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
 
 <main class="in">
   <div id="notice"></div>
-  <div id="units" style="display:flex;flex-direction:column;gap:22px"></div>
+  <div id="units" style="display:flex;flex-direction:column;gap:26px"></div>
 
   <details class="box">
     <summary>今日の配分</summary>
     <div id="today"></div>
   </details>
   <details class="box">
-    <summary>設定（この端末に保存）</summary>
+    <summary>設定</summary>
     <div class="form">
       <label>安全ラインの基準
         <select id="basis">
           <option value="max">過去でいちばん伸びた例</option>
           <option value="p90">上位10%の伸び</option>
-          <option value="median">ふつうの伸び（中央値）</option>
+          <option value="median">中央値</option>
         </select>
       </label>
-      <label>さらに上乗せ（%）<input id="margin" inputmode="decimal"></label>
+      <label>上乗せ（%）<input id="margin" inputmode="decimal"></label>
       <label>曲と曲のあいだ（秒）<input id="gap" inputmode="numeric"></label>
-      <label>オート1回の時間（秒）<input id="autoSec" inputmode="numeric"></label>
-      <label>休み（7時間）の開始
+      <label>休み7時間の開始
         <select id="restStart"></select>
       </label>
+      <label>今日の残りスキップ<input id="skipLeft" inputmode="numeric"></label>
+      <label>今日の残りオート<input id="autoLeft" inputmode="numeric"></label>
     </div>
-    <p class="note" style="margin-top:6px">手で遊ぶときの時速は、「曲」で選んだ曲の長さに曲と曲のあいだを足した時間と、その曲の1回の人数から出します。オートは1回ごとに「オート1回の時間」がかかり、スキップは時間がかかりません。</p>
-    <p class="sub">今日の残り回数</p>
-    <div class="form">
-      <label>スキップ（1日20回）<input id="skipLeft" inputmode="numeric"></label>
-      <label>オート（1日50回）<input id="autoLeft" inputmode="numeric"></label>
-    </div>
-    <p class="note" style="margin-top:6px">使った分を減らして入れてください。0:00に20回・50回に戻り、入れた数はその日のうちだけ使います。残りの日数分と合わせて、足りない人に割り振ります。</p>
-    <label class="busy">遊べない予定（1行に1つ、例 2026-11-05 18:00-21:00）<textarea id="busy" rows="3"></textarea></label>
-    <p class="note" style="margin-top:6px">ファン数が増えない7時間の休みは、初日と最終日にはなく、そのあいだの毎日に入る前提で計算しています。</p>
-    <p class="note" style="margin-top:8px">狙う順位、アイドルごとの曲と時速は、カードを開いても変えられます。</p>
+    <label class="busy">遊べない予定<textarea id="busy" rows="3" placeholder="2026-11-05 18:00-21:00"></textarea></label>
   </details>
   <details class="box">
-    <summary>曲（手動・オート・スキップ）</summary>
+    <summary>曲</summary>
     <div class="songhead"><span>曲名</span><span>長さ</span><span>1回の人数</span><span></span></div>
     <div id="songList"></div>
-    <p style="margin:8px 0 0"><button type="button" class="mini" id="addSong">曲を足す</button></p>
-    <p class="note" style="margin-top:6px">長さは「2:05」か「125」（秒）で入れます。1回の人数が曲で変わるなら、ここで曲ごとに直します。</p>
+    <p style="margin:10px 0 0"><button type="button" class="mini" id="addSong">曲を足す</button></p>
     <p class="sub">ふだんの曲</p>
     <div class="songpick" id="defPick"></div>
-    <p class="note" id="rateNote" style="margin-top:6px"></p>
+    <p class="note" id="rateNote"></p>
     <p class="sub">アイドルごとの曲</p>
     <table class="pick"><colgroup><col class="nm"><col><col><col></colgroup>
-      <thead><tr><th></th><th>手で遊ぶ</th><th>オート</th><th>スキップ</th></tr></thead><tbody id="pickBody"></tbody></table>
-    <p class="note" style="margin-top:6px">「ふだん」のままのところは、上のふだんの曲を使います。ふだんと違う曲を選んだところは青くなります。</p>
+      <thead><tr><th></th><th>手動</th><th>オート</th><th>スキップ</th></tr></thead><tbody id="pickBody"></tbody></table>
   </details>
-  <p class="note">ボーダーは、Discordに流れてくるBotの投稿を15分ごとに記録したものです。予測は、今のボーダーに、過去2回（2周年・2.5周年）で同じ経過率から最終までに伸びた倍率の中央値をかけています。安全ラインは、選んだ基準の倍率に上乗せを足したものです。「前回」は、2.5周年の同じ経過率と比べた倍率です。ユニットの色は近い色を使っています。非公式のファンツールです。</p>
+  <p class="foot">非公式のファンツールです</p>
 </main>
 
 <dialog id="sheet" aria-labelledby="sheetTitle"><div class="sheet" id="sheetBody"></div></dialog>
@@ -251,9 +252,9 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
 
   // ---------- settings ----------
-  const MODES = { play: "手で遊ぶ曲", auto: "オートの曲", skip: "スキップの曲" };
+  const MODES = { play: "手動の曲", auto: "オートの曲", skip: "スキップの曲" };
   const SKIP_DAY = 20, AUTO_DAY = 50;
-  const defaults = () => ({ basis: "max", margin: 0, gap: null, autoSec: 120, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
+  const defaults = () => ({ basis: "max", margin: 0, gap: null, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
     songs: [{ id: "s1", name: "星の数だけ（アニメVer.）MASTER", len: 125, fans: 25000 }],
     def: { play: "s1", auto: "s1", skip: "s1" }, songBy: {}, left: null,
     target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {}, rateBy: {}, hist: {} });
@@ -294,7 +295,6 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   const songById = id => S.songs.find(s => s.id === id);
   const songOf = (name, mode) => songById((S.songBy[name] || {})[mode]) || songById(S.def[mode]) || S.songs[0];
   const gapSec = () => { const g = num(S.gap); return g != null && g >= 0 ? g : 25; };
-  const autoSecs = () => { const a = num(S.autoSec); return a > 0 ? a : 120; };
   const songRate = s => s && s.len > 0 && s.fans > 0 ? s.fans * 3600 / (s.len + gapSec()) : null;
   const lenOf = v => { const m = String(v ?? "").trim().match(/^(\d+)[:：分](\d{1,2})秒?$/); if (m) return +m[1] * 60 + +m[2]; const x = num(String(v ?? "").replace(/秒$/, "")); return x > 0 ? x : null; };
   const fmtLen = s => s > 0 ? Math.floor(s / 60) + ":" + String(Math.round(s % 60)).padStart(2, "0") : "";
@@ -374,6 +374,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       r.song = { play: songOf(name, "play"), auto: songOf(name, "auto"), skip: songOf(name, "skip") };
       r.rateSong = songRate(r.song.play); r.rateOwn = num(S.rateBy[name]); r.rate = r.rateOwn || r.rateSong;
       r.skipFans = r.song.skip.fans > 0 ? r.song.skip.fans : 0; r.autoFans = r.song.auto.fans > 0 ? r.song.auto.fans : 0;
+      r.autoH = (r.song.auto.len > 0 ? r.song.auto.len : 120) / 3600;   // an auto plays the song through
       r.nSkip = 0; r.nAuto = 0;
       const h = S.hist[name] || [];
       if (h.length >= 2) {
@@ -412,7 +413,6 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     }
     // Skips cost no time: give them where a play by hand is slowest. Autos take their own time: use them only
     // where an auto beats the same fans by hand, best gain first. Ties go to the smaller need.
-    const autoH = autoSecs() / 3600;
     const act = out.filter(r => r.tgt !== "off" && r.need > 0 && r.rate);
     if (pool) {
       let sp = pool.skip, ap = pool.auto;
@@ -420,12 +420,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         if (sp <= 0 || !r.skipFans) return;
         r.nSkip = Math.min(sp, Math.ceil(r.need / r.skipFans)); sp -= r.nSkip;
       });
-      const gain = r => r.autoFans / r.rate - autoH;
+      const gain = r => r.autoFans / r.rate - r.autoH;
       [...act].sort((a, b) => gain(b) - gain(a) || a.need - b.need).forEach(r => {
         if (ap <= 0 || !r.autoFans || gain(r) <= 0) return;
         const rest = Math.max(0, r.need - r.nSkip * r.skipFans);
         let k = Math.floor(rest / r.autoFans);
-        if (tailAuto(r, rest - k * r.autoFans, autoH)) k++;   // a last, partial auto only if it is quicker than the whole hand plays it replaces
+        if (tailAuto(r, rest - k * r.autoFans, r.autoH)) k++;   // a last, partial auto only if it is quicker than the whole hand plays it replaces
         r.nAuto = Math.min(ap, k); ap -= r.nAuto;
       });
       pool.skipUse = pool.skip - sp; pool.autoUse = pool.auto - ap;
@@ -435,7 +435,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       r.gotSkip = Math.min(r.need, r.nSkip * r.skipFans); r.gotAuto = Math.min(r.need - r.gotSkip, r.nAuto * r.autoFans);
       const rest = r.need - r.gotSkip - r.gotAuto;
       r.manualH = r.rate ? rest / r.rate : rest > 0 ? null : 0;
-      r.hours = r.need === 0 ? 0 : r.manualH == null ? null : r.manualH + r.nAuto * autoH;
+      r.hours = r.need === 0 ? 0 : r.manualH == null ? null : r.manualH + r.nAuto * r.autoH;
     });
     let used = 0;
     out.filter(r => r.status !== "off" && r.safe != null).sort((a, b) => (a.hours ?? 1e9) - (b.hours ?? 1e9)).forEach(r => {
@@ -444,7 +444,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
       else r.status = "no";
     });
-    return { ev, leftH, avail, used, todayH, pool, autoH, rows: out };
+    return { ev, leftH, avail, used, todayH, pool, rows: out };
   }
 
   // ---------- render ----------
@@ -453,19 +453,19 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     ctx = compute(); rows = ctx.rows;
     const { ev, leftH, avail, used } = ctx, now = new Date();
     const notes = [];
-    if (loadErr) notes.push(`<div class="notice warn">記録を読み込めませんでした（${esc(loadErr)}）。少し待ってから「更新する」を押してください。</div>`);
+    if (loadErr) notes.push(`<div class="notice warn">記録を読み込めませんでした（${esc(loadErr)}）。少し待って「更新」を押してください。</div>`);
     let lastPct = null;
     if (!ev) {
-      $("#eventLine").textContent = "開催中のイベントの記録はまだありません";
+      $("#eventLine").textContent = "開催前";
       $("#updated").textContent = "";
-      notes.push(`<div class="notice">イベントが始まって最初の投稿が届くと、カードに今のボーダーが入ります。それまでは前回の最終ボーダーを出しています。カードを開くと、過去2回の推移が見られます。</div>`);
+      notes.push(`<div class="notice">イベントが始まると、今のボーダーが入ります。今は前回の最終ボーダーです。</div>`);
     } else {
       const all = Object.values(ev.idols).flat();
       const lastT = all.map(p => p[0]).sort().pop(); lastPct = Math.max(...all.map(p => p[1]));
       const age = lastT ? Math.round((now - jst(lastT)) / 60000) : null;
       $("#eventLine").textContent = ev.title;
       $("#updated").textContent = lastT ? `${lastT.slice(5).replace("-", "/")} の記録（${age}分前）` : "";
-      if (age != null && age > 45) notes.push(`<div class="notice warn">最新の記録が${age}分前です。記録が止まっている可能性があります。</div>`);
+      if (age != null && age > 45) notes.push(`<div class="notice warn">最新の記録が${age}分前です。止まっているかもしれません。</div>`);
     }
     $("#notice").innerHTML = notes.join("");
 
@@ -489,12 +489,13 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     // today: walk the reachable idols, shortest first, and finish each one with today's skips (no time),
     // today's autos (where quicker than by hand) and hand play, until today's hours run out. Skips left over
     // still go to the next idols, since they reset at 0:00.
-    const P = ctx.pool, aH = ctx.autoH; let budget = ctx.todayH || 0, sk = P ? P.skipToday : 0, au = P ? P.autoToday : 0; const items = [];
+    const P = ctx.pool; let budget = ctx.todayH || 0, sk = P ? P.skipToday : 0, au = P ? P.autoToday : 0; const items = [];
     for (const r of rows.filter(r => r.status === "plan" && r.rate).sort((a, b) => a.hours - b.hours)) {
       if (budget <= 1e-9 && sk <= 0) break;
       let rest = r.need;
       const s = r.skipFans ? Math.min(sk, Math.ceil(rest / r.skipFans)) : 0; sk -= s; rest = Math.max(0, rest - s * r.skipFans);
       let a = 0;
+      const aH = r.autoH;
       if (r.autoFans && r.autoFans / r.rate > aH) {
         a = Math.floor(rest / r.autoFans); if (tailAuto(r, rest - a * r.autoFans, aH)) a++;
         a = Math.min(a, au, Math.floor((budget + 1e-9) / aH));
@@ -503,12 +504,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       const m = Math.min(budget, rest / r.rate); budget -= m;
       if (!s && !a && m <= 1e-9) continue;
       const left = rest / r.rate - m;
-      const parts = [m > 1e-9 ? `手で <span class="n">${hrs(m)}</span>` : "", a ? `オート <span class="n">${a}</span>回` : "", s ? `スキップ <span class="n">${s}</span>回` : ""].filter(Boolean);
+      const parts = [m > 1e-9 ? `手動 <span class="n">${hrs(m)}</span>` : "", a ? `オート <span class="n">${a}</span>回` : "", s ? `スキップ <span class="n">${s}</span>回` : ""].filter(Boolean);
       items.push(`<li>${esc(r.name)}　${parts.join("・")}${left > 1e-6 ? `（あと${hrs(left)}）` : ""}</li>`);
     }
-    const poolLine = P ? `<p class="note">今日の残り：スキップ ${P.skipToday}回・オート ${P.autoToday}回（設定で直せます）。終了までの合計：スキップ ${P.skip}回・オート ${P.auto}回のうち、${P.skipUse}回・${P.autoUse}回を割り振っています。</p>` : "";
-    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">今日このあと遊べる ${hrs(ctx.todayH)} と今日のスキップ・オートを、安全ラインまでの時間が短い順に割り当てています。</p>${poolLine}`
-      : `<p class="note">${ev ? "自分のスコアを入れると、ここに今日の配分が出ます。" : "イベントが始まると、ここに今日の配分が出ます。"}</p>${poolLine}`;
+    const poolLine = P ? `<p class="note">今日の残り スキップ <span class="n">${P.skipToday}</span>・オート <span class="n">${P.autoToday}</span>　終了まで スキップ <span class="n">${P.skip}</span>・オート <span class="n">${P.auto}</span></p>` : "";
+    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol>${poolLine}`
+      : `<p class="note">${ev ? "自分のスコアを入れると出ます。" : "イベントが始まると出ます。"}</p>${poolLine}`;
     const ae = document.activeElement, lt = todayLeft(Date.now());
     if (ae !== $("#skipLeft")) $("#skipLeft").value = lt.skip;
     if (ae !== $("#autoLeft")) $("#autoLeft").value = lt.auto;
@@ -559,7 +560,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         <div class="songpick">${Object.keys(MODES).map(m => `<label>${MODES[m]}<select data-song="${m}">${songOpts(name, m)}</select></label>`).join("")}</div>
         <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(r.rateSong))}（曲から）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
           ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
-            : `<span class="meas">スコアを2回以上入れると、その間の時速が出ます</span>`}</div>
+            : ""}</div>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
           <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
@@ -568,24 +569,24 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         </div>
         <div class="chart" id="chart">${chartSvg(r)}<div class="tip" id="tip"></div></div>
         <table class="cmp"><thead><tr><th>過去の開催</th><th>同じ経過率</th><th>今回は</th><th>最終</th></tr></thead><tbody>${cmpRows}</tbody></table>
-        <p class="note">「今回は」は、今のボーダーを、過去の同じ経過率のボーダーで割った倍率です。グラフを押さえたまま横に動かすと、その時点の数字が出ます。</p>
+
       </div>`;
     bindChart();
   }
 
-  function songOpts(name, mode) {   // name null: the usual-song picker
+  function songOpts(name, mode, short) {   // name null: the usual-song picker
     const own = name ? (S.songBy[name] || {})[mode] : S.def[mode];
     const sel = songById(own) ? own : "";
-    const head = name ? `<option value=""${sel ? "" : " selected"}>ふだん（${esc(songOf(null, mode).name)}）</option>` : "";
+    const head = name ? `<option value=""${sel ? "" : " selected"}>${short ? "ふだん" : `ふだん（${esc(songOf(null, mode).name)}）`}</option>` : "";
     return head + S.songs.map(s => `<option value="${esc(s.id)}"${s.id === sel ? " selected" : ""}>${esc(s.name || "（名前なし）")}</option>`).join("");
   }
   function splitLine(r) {
     if (r.need == null || r.need <= 0) return "";
     const p = [];
     if (r.nSkip) p.push(`スキップ <b class="n">${r.nSkip}</b>回（${man(r.gotSkip)}）`);
-    if (r.nAuto) p.push(`オート <b class="n">${r.nAuto}</b>回（${man(r.gotAuto)}、${mins(r.nAuto * ctx.autoH)}）`);
-    if (r.manualH > 0) p.push(`手で <b class="n">${hrs(r.manualH)}</b>（時速 ${man(r.rate)}）`);
-    return `<p class="split">内訳：${p.join("・") || "—"}</p>`;
+    if (r.nAuto) p.push(`オート <b class="n">${r.nAuto}</b>回（${man(r.gotAuto)}、${mins(r.nAuto * r.autoH)}）`);
+    if (r.manualH > 0) p.push(`手動 <b class="n">${hrs(r.manualH)}</b>（時速 ${man(r.rate)}）`);
+    return `<p class="split">${p.join("・") || "—"}</p>`;
   }
   function setSong(name, mode, id) {
     if (name) { const m = S.songBy[name] = S.songBy[name] || {}; if (id) m[mode] = id; else delete m[mode]; if (!Object.keys(m).length) delete S.songBy[name]; }
@@ -602,9 +603,9 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       <button type="button" class="mini" data-del ${S.songs.length < 2 ? "disabled" : ""}>消す</button></div>`).join("");
     $("#defPick").innerHTML = Object.keys(MODES).map(m => `<label>${MODES[m]}<select data-def="${m}">${songOpts(null, m)}</select></label>`).join("");
     $("#pickBody").innerHTML = IDOLS.map(n => `<tr style="--u:${UNIT_OF[n].color}"><th>${esc(GIVEN[n])}</th>${Object.keys(MODES).map(m =>
-      `<td><select data-idol="${esc(n)}" data-mode="${m}" aria-label="${esc(GIVEN[n])}の${MODES[m]}" class="${songById((S.songBy[n] || {})[m]) ? "set" : ""}">${songOpts(n, m)}</select></td>`).join("")}</tr>`).join("");
+      `<td><select data-idol="${esc(n)}" data-mode="${m}" aria-label="${esc(GIVEN[n])}の${MODES[m]}" class="${songById((S.songBy[n] || {})[m]) ? "set" : ""}">${songOpts(n, m, true)}</select></td>`).join("")}</tr>`).join("");
     const p = songOf(null, "play"), rt = songRate(p);
-    $("#rateNote").textContent = rt ? `ふだんの曲を手で遊ぶと、1回 ${p.len + gapSec()}秒（曲 ${fmtLen(p.len)}＋あいだ ${gapSec()}秒）で時速 ${man(rt)}。オート1回は ${autoSecs()}秒で、時速にすると ${man(songOf(null, "auto").fans * 3600 / autoSecs())}。` : "ふだんの曲の長さと人数を入れると、時速が出ます。";
+    $("#rateNote").textContent = rt ? `手動 1回 ${fmtLen(p.len + gapSec())}・時速 ${man(rt)}` : "";
   }
   $("#songList").addEventListener("change", e => {
     const row = e.target.closest(".songrow"), s = row && songById(row.dataset.id); if (!s) return;
@@ -711,11 +712,10 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
   const put = (id, v) => { $(id).value = v ?? ""; };
   $("#restStart").innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${h}:00〜${(h + 7) % 24}:00</option>`).join("");
-  put("#basis", S.basis); put("#margin", S.margin); put("#gap", gapSec()); put("#autoSec", autoSecs()); put("#restStart", S.restStart); put("#busy", S.busy);
+  put("#basis", S.basis); put("#margin", S.margin); put("#gap", gapSec()); put("#restStart", S.restStart); put("#busy", S.busy);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
   $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
   $("#gap").addEventListener("change", e => { const v = num(e.target.value); if (v != null && v >= 0) S.gap = v; put("#gap", gapSec()); save(); buildSongs(); render(); });
-  $("#autoSec").addEventListener("change", e => { const v = lenOf(e.target.value); if (v) S.autoSec = v; put("#autoSec", autoSecs()); save(); buildSongs(); render(); });
   const setLeft = (k, v) => { const now = Date.now(), lt = todayLeft(now), max = k === "skip" ? SKIP_DAY : AUTO_DAY;
     const x = num(v); if (x != null) lt[k] = Math.max(0, Math.min(max, Math.round(x)));
     S.left = Object.assign({ date: dkey(now) }, lt); save(); render(); };
