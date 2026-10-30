@@ -88,6 +88,8 @@ main.in{display:flex;flex-direction:column;gap:22px;padding-top:18px;padding-bot
 details.box{background:var(--paper);border:1.5px solid var(--rule);border-radius:16px;padding:10px 14px}
 details.box>summary{cursor:pointer;font-weight:700;font-size:.9rem}
 .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.busy{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--ink-2);margin-top:10px}
+.busy textarea{font:inherit;font-size:.85rem;color:var(--ink);background:var(--page);border:1.5px solid var(--rule);border-radius:10px;padding:6px 9px;resize:vertical}
 .form label{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--ink-2)}
 input,select{font:inherit;color:var(--ink);background:var(--page);border:1.5px solid var(--rule);border-radius:10px;padding:6px 9px}
 ol{margin:6px 0 0;padding-left:1.4em;font-size:.9rem}
@@ -165,8 +167,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       </label>
       <label>さらに上乗せ（%）<input id="margin" inputmode="decimal"></label>
       <label>時速（1時間あたり）<input id="rate" inputmode="numeric"></label>
-      <label>1日に遊べる時間<input id="hpd" inputmode="decimal"></label>
+      <label>休み（7時間）の開始
+        <select id="restStart"></select>
+      </label>
     </div>
+    <label class="busy">遊べない予定（1行に1つ、例 2026-11-05 18:00-21:00）<textarea id="busy" rows="3"></textarea></label>
+    <p class="note" style="margin-top:6px">ファン数が増えない7時間の休みは、初日と最終日にはなく、そのあいだの毎日に入る前提で計算しています。</p>
     <p class="note" style="margin-top:8px">狙う順位とアイドルごとの時速は、カードを開いて変えます。アイドルごとの時速がなければ、ここの時速を使います。</p>
   </details>
   <p class="note">ボーダーは、Discordに流れてくるBotの投稿を15分ごとに記録したものです。予測は、今のボーダーに、過去2回（2周年・2.5周年）で同じ経過率から最終までに伸びた倍率の中央値をかけています。安全ラインは、選んだ基準の倍率に上乗せを足したものです。「前回」は、2.5周年の同じ経過率と比べた倍率です。ユニットの色は近い色を使っています。非公式のファンツールです。</p>
@@ -196,7 +202,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
 
   // ---------- settings ----------
-  const defaults = () => ({ basis: "max", margin: 0, rate: 750000, hpd: 17,
+  const defaults = () => ({ basis: "max", margin: 0, rate: 750000, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
     target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {}, rateBy: {}, hist: {} });
   let S = defaults();
   try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) S = Object.assign(defaults(), s, { target: Object.assign(defaults().target, s.target || {}) }); } catch (e) {}
@@ -230,6 +236,28 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     const i = Math.floor(p), j = Math.min(100, Math.ceil(p));
     if (g[i] == null || g[j] == null) return null;
     return g[i] + (g[j] - g[i]) * (p - i);
+  }
+
+  // ---------- playable-time calendar ----------
+  const H = 3600000, D = 24 * H, JST = 9 * H;
+  const dayStart = ms => Math.floor((ms + JST) / D) * D - JST;          // 0:00 JST of that day
+  function blocked(ev) {
+    const out = [], first = dayStart(jst(ev.start).getTime()), last = dayStart(jst(ev.end).getTime());
+    const rs = num(S.restStart) || 0;
+    for (let d = first + D; d < last; d += D) out.push([d + rs * H, d + rs * H + 7 * H]);   // no rest on the first and last day
+    for (const line of String(S.busy || "").split(/\n/)) {
+      const m = line.trim().match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2})\s*[-~〜～]\s*(\d{1,2}):(\d{2})$/);
+      if (!m) continue;
+      const base = jst(m[1] + " 00:00").getTime();
+      const a = base + (+m[2]) * H + (+m[3]) * 60000; let b = base + (+m[4]) * H + (+m[5]) * 60000; if (b <= a) b += D;
+      out.push([a, b]);
+    }
+    return out;
+  }
+  function playable(from, to, blocks) {   // hours in [from, to) outside every block, 5-minute steps
+    const step = 5 * 60000; let n = 0;
+    for (let t = from; t < to; t += step) if (!blocks.some(([a, b]) => t >= a && t < b)) n += Math.min(step, to - t);
+    return n / H;
   }
 
   // ---------- data ----------
@@ -288,8 +316,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       }
       return r;
     });
-    const hpd = num(S.hpd);
-    const avail = ev && hpd != null ? Math.min(leftH, hpd * leftH / 24) : null;
+    let avail = null, todayH = null;
+    if (ev) {
+      const bl = blocked(ev), t0 = now.getTime(), end = jst(ev.end).getTime() + 60000;   // the event runs through 20:59
+      avail = playable(t0, end, bl);
+      todayH = playable(t0, Math.min(end, dayStart(t0) + D), bl);
+    }
     let used = 0;
     out.filter(r => r.status !== "off" && r.safe != null).sort((a, b) => (a.hours ?? 1e9) - (b.hours ?? 1e9)).forEach(r => {
       if (r.need === 0) r.status = "ok";
@@ -297,7 +329,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
       else r.status = "no";
     });
-    return { ev, leftH, avail, used, hpd, rows: out };
+    return { ev, leftH, avail, used, todayH, rows: out };
   }
 
   // ---------- render ----------
@@ -339,12 +371,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         <div class="members">${rs.map(card).join("")}</div></section>`;
     }).join("");
 
-    let budget = Math.min(ctx.hpd || 0, leftH || 0); const items = [];
+    let budget = ctx.todayH || 0; const items = [];
     for (const r of rows.filter(r => r.status === "plan").sort((a, b) => a.hours - b.hours)) {
       if (budget <= 0) break; const h = Math.min(budget, r.hours); budget -= h;
       items.push(`<li>${esc(r.name)} <span class="n">${hrs(h)}</span>${h < r.hours - 1e-9 ? `（あと${hrs(r.hours - h)}）` : ""}</li>`);
     }
-    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">安全ラインまで、必要な時間が短い順に、1日に遊べる時間を割り当てています。</p>`
+    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">今日このあと遊べる ${hrs(ctx.todayH)} を、安全ラインまでの時間が短い順に割り当てています。</p>`
       : `<p class="note">${ev ? "自分のスコアを入れると、ここに今日の配分が出ます。" : "イベントが始まると、ここに今日の配分が出ます。"}</p>`;
 
     if (openName && $("#sheet").open) fillSheet(openName);
@@ -486,11 +518,13 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   // ---------- events ----------
   $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
   const put = (id, v) => { $(id).value = v ?? ""; };
-  put("#basis", S.basis); put("#margin", S.margin); put("#rate", full(S.rate)); put("#hpd", S.hpd);
+  $("#restStart").innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${h}:00〜${(h + 7) % 24}:00</option>`).join("");
+  put("#basis", S.basis); put("#margin", S.margin); put("#rate", full(S.rate)); put("#restStart", S.restStart); put("#busy", S.busy);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
   $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
   $("#rate").addEventListener("change", e => { S.rate = num(e.target.value); e.target.value = full(S.rate); save(); render(); });
-  $("#hpd").addEventListener("change", e => { S.hpd = num(e.target.value); save(); render(); });
+  $("#restStart").addEventListener("change", e => { S.restStart = +e.target.value; save(); render(); });
+  $("#busy").addEventListener("change", e => { S.busy = e.target.value; save(); render(); });
   $("#reload").addEventListener("click", load);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && (!loadedAt || Date.now() - loadedAt > 60000)) load(); });
   setInterval(() => { if (!document.hidden) load(); }, 3 * 60 * 1000);
