@@ -15,3 +15,9 @@ Reads the border posts in your own Discord server every 15 minutes (GitHub Actio
 5. Actions tab → **collect borders** → **Run workflow** once, and check the log line `channels=… new_snapshots=…`.
 
 Runs on a schedule can be late by several minutes or more when GitHub is busy.
+
+## Site
+
+`index.html` is served by GitHub Pages from `main` (root). It reads `data/points.json` and `data/reference.json`.
+
+Idol pictures are optional: put `img/<full name>.png` (for example `img/幽谷霧子.png`, portrait, face near the top) and the card and the detail view will show it. Without a picture, the first character of the given name is shown in the unit color. Check the rights and the official rules for any picture you add; this repository and site are public.

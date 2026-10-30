@@ -5,124 +5,153 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <title>シャニソン ボーダー速報</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Quicksand:wght@500;600;700&display=swap">
 <style>
 :root{
   color-scheme:light;
-  --bg:#f3f4f8; --panel:#fff; --fg:#1b1d2a; --muted:#646a82; --line:#dcdfea;
-  --accent:#3b55c9; --accent-soft:#e6eafb;
-  --ok:#1f7a4d; --ok-soft:#dff3e8; --plan:#3b55c9; --plan-soft:#e6eafb; --bad:#b0342c; --bad-soft:#f9e1de;
+  --page:#f3f8fd; --paper:#ffffff; --ink:#1e2a46; --ink-2:#5b6787; --rule:#dce7f3;
+  --sky:#4aa8e0; --p-pink:#f9cfe0; --p-yellow:#fbe9a6; --p-sky:#c4e6f8;
+  --no:#d6455d; --no-bg:#fdeef1; --plan:#3a72cf; --plan-bg:#ecf2fd; --ok:#239a6d; --ok-bg:#e8f7f0; --wait:#8c96ad;
   --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
-  --num:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --jp:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Hiragino Sans",system-ui,sans-serif;
+  --lat:"Quicksand","Zen Maru Gothic",system-ui,sans-serif;
 }
 @media (prefers-color-scheme:dark){:root{
   color-scheme:dark;
-  --bg:#12131b; --panel:#1b1d28; --fg:#e7e9f2; --muted:#9aa0b8; --line:#2d3042;
-  --accent:#8ea0f2; --accent-soft:#252b4a;
-  --ok:#6fd3a0; --ok-soft:#173326; --plan:#8ea0f2; --plan-soft:#252b4a; --bad:#f08a80; --bad-soft:#3d1c1a;
+  --page:#141a2b; --paper:#1d2538; --ink:#eef2fb; --ink-2:#a6b0c8; --rule:#2e3850;
+  --sky:#6cbcec; --p-pink:#5a3346; --p-yellow:#5a4f2a; --p-sky:#24445e;
+  --no:#ff8496; --no-bg:#3a2130; --plan:#8fb0f2; --plan-bg:#23304d; --ok:#5fd3a4; --ok-bg:#183a30; --wait:#8590a8;
   --s1:#3987e5; --s2:#d95926; --s3:#199e70;}}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif}
-.wrap{max-width:900px;margin:0 auto;padding:14px max(12px,env(safe-area-inset-right)) 40px max(12px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:14px}
-h1{font-size:1.15rem;margin:0}
-.sub{color:var(--muted);font-size:.8rem;margin:2px 0 0}
-.num{font-family:var(--num);font-variant-numeric:tabular-nums}
-.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-button{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 12px;cursor:pointer;white-space:nowrap;flex:none}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 9px;min-width:0}
-.stat .k{display:block;font-size:.68rem;color:var(--muted)}
-.stat .v{display:block;font-size:1.05rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:440px){.stats{grid-template-columns:repeat(2,1fr)}}
-.banner{border-radius:8px;padding:8px 10px;font-size:.85rem;background:var(--bad-soft);color:var(--bad)}
-.banner.info{background:var(--accent-soft);color:var(--accent)}
+body{margin:0;background:var(--page);color:var(--ink);font:15px/1.6 var(--jp)}
+.n{font-family:var(--lat);font-variant-numeric:tabular-nums lining-nums;font-weight:700}
 
-/* sections: 100th and 500th look different at a glance */
-.sec{display:flex;flex-direction:column;gap:8px}
-.sec h2{margin:0;font-size:1rem;display:flex;align-items:center;gap:8px}
-.badge{display:inline-flex;align-items:center;justify-content:center;font-family:var(--num);font-weight:800;border-radius:6px;padding:1px 8px;font-size:.85rem}
-.badge.b100{background:var(--fg);color:var(--bg)}
-.badge.b500{border:1.5px solid var(--muted);color:var(--muted)}
-.sec h2 .cnt{font-size:.78rem;color:var(--muted);font-weight:400}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.sec.s100 .grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
+/* header: the one place the prism colors appear */
+.hero{background:linear-gradient(120deg,var(--p-sky) 0%,var(--p-pink) 48%,var(--p-yellow) 100%);padding:20px 0 26px;border-bottom-left-radius:28px;border-bottom-right-radius:28px}
+.in{max-width:920px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left));padding-right:max(14px,env(safe-area-inset-right))}
+.hero .row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hero h1{margin:0;font-weight:900;font-size:1.55rem;letter-spacing:.04em;line-height:1.25}
+.hero h1 small{display:block;font-size:.8rem;font-weight:500;letter-spacing:.02em;color:var(--ink-2)}
+.refresh{font:inherit;font-size:.82rem;font-weight:700;color:var(--ink);background:var(--paper);border:1.5px solid var(--ink);border-radius:999px;padding:5px 14px;cursor:pointer;white-space:nowrap}
+.refresh:focus-visible,.card:focus-visible,button:focus-visible{outline:2.5px solid var(--sky);outline-offset:2px}
+.sumline{margin:14px 0 0;display:grid;grid-template-columns:repeat(4,auto);justify-content:start;gap:4px 22px}
+.sumline div{display:flex;flex-direction:column}
+.sumline .k{font-size:.72rem;color:var(--ink-2)}
+.sumline .v{font-size:1.35rem;line-height:1.2}
+.sumline .v small{font-size:.8rem;font-weight:600;margin-left:1px}
+@media (max-width:460px){.sumline{grid-template-columns:repeat(2,auto);gap:6px 28px}}
+.updated{margin:10px 0 0;font-size:.78rem;color:var(--ink-2)}
 
-.card{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:1px;min-width:0;
-  background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:8px 10px}
-.card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.card.no{border-left-color:var(--bad);background:linear-gradient(90deg,var(--bad-soft),var(--panel) 70%)}
-.card.plan{border-left-color:var(--plan)}
-.card.ok{border-left-color:var(--ok);background:linear-gradient(90deg,var(--ok-soft),var(--panel) 70%)}
+main.in{display:flex;flex-direction:column;gap:22px;padding-top:18px;padding-bottom:44px}
+.notice{border-radius:14px;padding:10px 14px;font-size:.86rem;background:var(--paper);border:1.5px solid var(--rule)}
+.notice.warn{border-color:var(--no);color:var(--no)}
+
+/* unit sections */
+.unit{--u:#888;display:flex;flex-direction:column;gap:10px}
+.ribbon{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 10px;padding:6px 16px 6px max(14px,env(safe-area-inset-left));background:var(--u);color:var(--ut,#fff);border-radius:0 999px 999px 0;margin-left:calc(-1 * max(14px, env(safe-area-inset-left)));width:fit-content;max-width:calc(100% + 14px)}
+.ribbon b{font-family:var(--lat);font-weight:700;font-size:1.12rem;letter-spacing:.02em}
+.ribbon span{font-size:.74rem;opacity:.92}
+.ribbon .alert{background:#fff;color:#c23a50;border-radius:999px;padding:0 8px;font-weight:700;font-size:.72rem;opacity:1}
+.members{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+
+/* cards: the 100th card is wide and rounder; 500th cards are compact */
+.card{all:unset;box-sizing:border-box;cursor:pointer;position:relative;display:grid;grid-template-columns:1fr;align-items:center;gap:2px 8px;
+  background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:9px 10px 9px 13px;min-width:0;overflow:hidden}
+.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--wait)}
+.card.no{background:var(--no-bg);border-color:color-mix(in srgb,var(--no) 35%,var(--rule))} .card.no::before{background:var(--no)}
+.card.plan::before{background:var(--plan)}
+.card.ok{background:var(--ok-bg)} .card.ok::before{background:var(--ok)}
 .card.off{opacity:.45}
-.sec.s100 .card{padding:10px 11px}
-.card .hd{display:flex;justify-content:space-between;align-items:center;gap:4px}
-.card .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st{font-size:.68rem;font-weight:700;white-space:nowrap}
-.st.no{color:var(--bad)} .st.plan{color:var(--plan)} .st.ok{color:var(--ok)} .st.na,.st.off{color:var(--muted)}
-.card .big{font-size:1.1rem;font-weight:700}
-.sec.s100 .card .big{font-size:1.25rem}
-.card .big .k{font-size:.72rem;font-weight:400;color:var(--muted);margin-right:4px}
-.card .sm{font-size:.74rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.up{color:var(--bad)} .down{color:var(--ok)}
+.card.top{grid-template-columns:1fr auto;grid-column:span 2;border-radius:20px;padding:12px 14px 12px 17px;border-color:color-mix(in srgb,var(--u) 45%,var(--rule))}
+.card.top::before{width:7px}
+.who{display:flex;align-items:center;gap:7px;min-width:0}
+.line2{grid-column:1;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.who b{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.top .who b{font-size:1.1rem}
+.rank{font-family:var(--lat);font-weight:700;font-size:.7rem;border-radius:999px;padding:0 7px;white-space:nowrap;border:1.5px solid var(--ink-2);color:var(--ink-2)}
+.card.top .rank{background:var(--ink);border-color:var(--ink);color:var(--paper);font-size:.74rem}
+.state{font-size:.72rem;font-weight:700;white-space:nowrap}
+.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.na,.state.off{color:var(--wait)}
+.fig{grid-column:1;font-size:1.15rem;line-height:1.25}
+.card.top .fig{font-size:1.5rem}
+.fig .k{font-family:var(--jp);font-size:.72rem;font-weight:500;color:var(--ink-2);margin-right:4px}
+.aux{grid-column:1;font-size:.74rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aux .up{color:var(--no);font-weight:700} .aux .down{color:var(--ok);font-weight:700}
+.face{flex:none;width:30px;height:30px;font-size:.9rem;border-radius:50%;position:relative;overflow:hidden;
+  background:color-mix(in srgb,var(--u) 18%,var(--paper));border:2px solid var(--u);display:grid;place-items:center;font-weight:900;color:var(--u)}
+.card.top .face{grid-column:2;grid-row:1/span 4;width:76px;height:76px;font-size:1.8rem;border-width:2.5px}
+.face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 12%}
 
-details.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-details>summary{cursor:pointer;font-size:.88rem;color:var(--muted)}
-.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
-.form label{display:flex;flex-direction:column;gap:3px;font-size:.75rem;color:var(--muted)}
-input,select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
-ol{margin:6px 0 0;padding-left:1.4em;font-size:.88rem}
-.note{font-size:.75rem;color:var(--muted);margin:0}
+details.box{background:var(--paper);border:1.5px solid var(--rule);border-radius:16px;padding:10px 14px}
+details.box>summary{cursor:pointer;font-weight:700;font-size:.9rem}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+.form label{display:flex;flex-direction:column;gap:3px;font-size:.76rem;color:var(--ink-2)}
+input,select{font:inherit;color:var(--ink);background:var(--page);border:1.5px solid var(--rule);border-radius:10px;padding:6px 9px}
+ol{margin:6px 0 0;padding-left:1.4em;font-size:.9rem}
+.note{font-size:.76rem;color:var(--ink-2);margin:0;line-height:1.7}
 
 /* detail sheet */
-dialog{border:none;padding:0;background:var(--panel);color:var(--fg);width:min(640px,100%);max-height:92vh;border-radius:14px;margin:auto}
-@media (max-width:640px){dialog{margin:auto 0 0;border-radius:14px 14px 0 0;max-width:100%}}
-dialog::backdrop{background:rgba(10,12,20,.55)}
-.sheet{padding:14px 14px max(18px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
-.sheet .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sheet h3{margin:0;font-size:1.15rem}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:none;border-radius:0;padding:4px 10px;font-size:.8rem;background:transparent;color:var(--muted)}
-.seg button.on{background:var(--fg);color:var(--bg);font-weight:700}
-.kv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-@media (max-width:440px){.kv{grid-template-columns:repeat(2,1fr)}}
-.kv div{border:1px solid var(--line);border-radius:8px;padding:5px 8px}
-.kv .k{display:block;font-size:.68rem;color:var(--muted)}
-.kv .v{display:block;font-weight:700}
-.kv .v.safe{color:var(--bad)}
-table.cmp{border-collapse:collapse;width:100%;font-size:.84rem}
-table.cmp th,table.cmp td{padding:5px 6px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
-table.cmp th{font-size:.72rem;color:var(--muted);font-weight:500}
-table.cmp th:first-child,table.cmp td:first-child{text-align:left}
-.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.74rem;color:var(--muted)}
+dialog{border:none;padding:0;background:var(--paper);color:var(--ink);width:min(640px,100%);max-height:92vh;border-radius:24px;margin:auto}
+@media (max-width:640px){dialog{margin:auto 0 0;border-radius:24px 24px 0 0;max-width:100%}}
+dialog::backdrop{background:rgba(20,30,55,.5)}
+.sheet{display:flex;flex-direction:column}
+.sheet-top{--u:#888;background:linear-gradient(120deg,var(--u),color-mix(in srgb,var(--u) 55%,#fff));color:#fff;padding:16px 16px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.sheet-top .face{width:64px;height:64px;border-color:#fff;background:rgba(255,255,255,.25);color:#fff;font-size:1.6rem}
+.sheet-top h3{margin:0;font-size:1.3rem;font-weight:900;line-height:1.2}
+.sheet-top h3 small{display:block;font-family:var(--lat);font-size:.8rem;font-weight:600;opacity:.95}
+.close{font:inherit;font-size:.82rem;font-weight:700;background:rgba(255,255,255,.95);color:#1e2a46;border:none;border-radius:999px;padding:5px 14px;cursor:pointer}
+.sheet-body{padding:14px 16px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{font:inherit;font-size:.8rem;font-weight:700;border:none;padding:4px 12px;background:transparent;color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 14px}
+@media (max-width:460px){.facts{grid-template-columns:repeat(2,1fr)}}
+.facts div{display:flex;flex-direction:column;border-bottom:1.5px solid var(--rule);padding-bottom:4px}
+.facts .k{font-size:.72rem;color:var(--ink-2)}
+.facts .v{font-size:1.15rem}
+.facts .v.safe{color:var(--no)}
+.myrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.9rem}
+.myrow input{width:9.5em;text-align:right;font-family:var(--lat);font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.76rem;color:var(--ink-2)}
 .legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{display:inline-block;width:16px;height:0;border-top:2px solid currentColor}
+.legend i{display:inline-block;width:18px;height:0;border-top:2.5px solid currentColor}
 .chart{position:relative}
 .chart svg{display:block;width:100%;height:auto;touch-action:pan-y}
-.chart text{fill:var(--muted);font-size:10px;font-family:var(--num)}
-.tip{position:absolute;pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:.74rem;box-shadow:0 2px 8px rgba(0,0,0,.18);white-space:nowrap;display:none}
-.tip b{font-family:var(--num)}
-.my{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:.88rem}
-.my input{width:9em;font-family:var(--num);text-align:right}
+.chart text{fill:var(--ink-2);font-size:10px;font-family:var(--lat);font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:5px 9px;font-size:.76rem;white-space:nowrap;display:none}
+table.cmp{border-collapse:collapse;width:100%;font-size:.86rem}
+table.cmp th,table.cmp td{padding:6px;border-bottom:1.5px solid var(--rule);text-align:right;white-space:nowrap}
+table.cmp th{font-size:.72rem;color:var(--ink-2);font-weight:500}
+table.cmp th:first-child,table.cmp td:first-child{text-align:left}
+td.up{color:var(--no)} td.down{color:var(--ok)}
+@media (prefers-reduced-motion:no-preference){dialog[open]{animation:rise .22s ease-out}@keyframes rise{from{transform:translateY(24px);opacity:.4}}}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <div>
-      <h1>シャニソン ボーダー速報</h1>
-      <p class="sub" id="eventLine">読み込み中…</p>
+<header class="hero">
+  <div class="in">
+    <div class="row">
+      <h1>ボーダー速報<small id="eventLine">読み込み中…</small></h1>
+      <button class="refresh" id="reload" type="button">更新する</button>
     </div>
-    <button id="reload" type="button">更新</button>
-  </header>
-  <div id="banner"></div>
-  <section class="stats" id="stats"></section>
-  <div id="sections"></div>
+    <div class="sumline" id="stats"></div>
+    <p class="updated" id="updated"></p>
+  </div>
+</header>
 
-  <details class="panel">
+<main class="in">
+  <div id="notice"></div>
+  <div id="units" style="display:flex;flex-direction:column;gap:22px"></div>
+
+  <details class="box">
     <summary>今日の配分</summary>
     <div id="today"></div>
   </details>
-  <details class="panel">
+  <details class="box">
     <summary>設定（この端末に保存）</summary>
     <div class="form">
       <label>安全ラインの基準
@@ -136,21 +165,33 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
       <label>時速（1時間あたり）<input id="rate" inputmode="numeric"></label>
       <label>1日に遊べる時間<input id="hpd" inputmode="decimal"></label>
     </div>
-    <p class="note" style="margin-top:8px">狙う順位は、各アイドルのカードを開いて切り替えます。</p>
+    <p class="note" style="margin-top:8px">狙う順位は、アイドルのカードを開いて切り替えます。</p>
   </details>
-  <p class="note">ボーダーは自分のDiscordサーバーに流れてくるBotの投稿を15分ごとに記録したもの。予測 = 今のボーダー × 過去2回（2周年・2.5周年、28人×2回）の同じ経過率から最終までの倍率の中央値。安全ライン = 選んだ基準の倍率 ＋ 上乗せ。前回比 = 今のボーダー ÷ 2.5周年の同じ経過率のボーダー。経過率が低いうちは予測のぶれが大きい。</p>
-</div>
+  <p class="note">ボーダーは、Discordに流れてくるBotの投稿を15分ごとに記録したものです。予測は、今のボーダーに、過去2回（2周年・2.5周年）で同じ経過率から最終までに伸びた倍率の中央値をかけています。安全ラインは、選んだ基準の倍率に上乗せを足したものです。「前回」は、2.5周年の同じ経過率と比べた倍率です。ユニットの色は近い色を使っています。非公式のファンツールです。</p>
+</main>
 
 <dialog id="sheet" aria-labelledby="sheetTitle"><div class="sheet" id="sheetBody"></div></dialog>
 
 <script>
 (() => {
   const $ = s => document.querySelector(s);
-  const IDOLS = ["櫻木真乃","風野灯織","八宮めぐる","月岡恋鐘","田中摩美々","白瀬咲耶","三峰結華","幽谷霧子","小宮果穂","園田智代子","西城樹里","杜野凛世","有栖川夏葉","大崎甘奈","大崎甜花","桑山千雪","芹沢あさひ","黛冬優子","和泉愛依","浅倉透","樋口円香","福丸小糸","市川雛菜","七草にちか","緋田美琴","斑鳩ルカ","鈴木羽那","郁田はるき"];
-  const TOP100 = ["幽谷霧子","和泉愛依","小宮果穂","大崎甘奈","八宮めぐる","市川雛菜","緋田美琴","郁田はるき"];
+  const UNITS = [
+    { name: "illumination STARS", kana: "イルミネーションスターズ", color: "#d99a17", text: "#1e2a46", members: ["櫻木真乃", "風野灯織", "八宮めぐる"] },
+    { name: "L'Antica", kana: "アンティーカ", color: "#7d54b8", members: ["月岡恋鐘", "田中摩美々", "白瀬咲耶", "三峰結華", "幽谷霧子"] },
+    { name: "放課後クライマックスガールズ", kana: "放クラ", color: "#e7701c", members: ["小宮果穂", "園田智代子", "西城樹里", "杜野凛世", "有栖川夏葉"] },
+    { name: "ALSTROEMERIA", kana: "アルストロメリア", color: "#e06b95", members: ["大崎甘奈", "大崎甜花", "桑山千雪"] },
+    { name: "Straylight", kana: "ストレイライト", color: "#c8364b", members: ["芹沢あさひ", "黛冬優子", "和泉愛依"] },
+    { name: "noctchill", kana: "ノクチル", color: "#2b97a6", members: ["浅倉透", "樋口円香", "福丸小糸", "市川雛菜"] },
+    { name: "SHHis", kana: "シーズ", color: "#4167b5", members: ["七草にちか", "緋田美琴"] },
+    { name: "CoMETIK", kana: "コメティック", color: "#4f4a7a", members: ["斑鳩ルカ", "鈴木羽那", "郁田はるき"] },
+  ];
+  const IDOLS = UNITS.flatMap(u => u.members);
+  const UNIT_OF = Object.fromEntries(UNITS.flatMap(u => u.members.map(m => [m, u])));
+  const GIVEN = { "櫻木真乃": "真乃", "風野灯織": "灯織", "八宮めぐる": "めぐる", "月岡恋鐘": "恋鐘", "田中摩美々": "摩美々", "白瀬咲耶": "咲耶", "三峰結華": "結華", "幽谷霧子": "霧子", "小宮果穂": "果穂", "園田智代子": "智代子", "西城樹里": "樹里", "杜野凛世": "凛世", "有栖川夏葉": "夏葉", "大崎甘奈": "甘奈", "大崎甜花": "甜花", "桑山千雪": "千雪", "芹沢あさひ": "あさひ", "黛冬優子": "冬優子", "和泉愛依": "愛依", "浅倉透": "透", "樋口円香": "円香", "福丸小糸": "小糸", "市川雛菜": "雛菜", "七草にちか": "にちか", "緋田美琴": "美琴", "斑鳩ルカ": "ルカ", "鈴木羽那": "羽那", "郁田はるき": "はるき" };
+  const TOP100 = ["幽谷霧子", "和泉愛依", "小宮果穂", "大崎甘奈", "八宮めぐる", "市川雛菜", "緋田美琴", "郁田はるき"];
   const COL = { "100": 5, "500": 6 };      // point = [time, pct, 1st, 12th, 50th, 100th, 500th]
   const KEY = "shanison-border-v1";
-  const STATUS = { no: "✕ 足りない", plan: "● 計画内", ok: "✓ 安全圏", na: "… 待ち", off: "狙わない" };
+  const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
 
   // ---------- settings ----------
   const defaults = () => ({ basis: "max", margin: 0, rate: 750000, hpd: 17,
@@ -164,11 +205,17 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
   const man = n => n == null || !isFinite(n) ? "—" : n >= 1e4 ? (n / 1e4).toFixed(n >= 1e7 ? 0 : 1) + "万" : Math.round(n).toLocaleString("ja-JP");
   const full = n => n == null || !isFinite(n) ? "" : Math.round(n).toLocaleString("ja-JP");
   const hrs = h => h == null || !isFinite(h) ? "—" : h <= 0 ? "0" : h < 1 ? Math.max(1, Math.round(h * 60)) + "分" : h.toFixed(1) + "時間";
-  const hh = h => h == null || !isFinite(h) ? "—" : h.toFixed(h < 10 ? 1 : 0) + "h";
   const jst = s => new Date(s.replace(" ", "T") + ":00+09:00");
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const q = (a, p) => { const s = [...a].sort((x, y) => x - y); const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
   const xr = r => r == null || !isFinite(r) ? "—" : "×" + r.toFixed(2);
+  const imgSrc = name => "img/" + encodeURIComponent(name) + ".png";
+  const imgOK = {};
+  const face = name => `<span class="face" aria-hidden="true">${esc((GIVEN[name] || name)[0])}${imgOK[name] ? `<img src="${imgSrc(name)}" alt="">` : ""}</span>`;
+  let imgTimer = null;
+  function probeImages() {   // one request per idol; cards show only images that exist in img/
+    IDOLS.forEach(n => { const im = new Image(); im.onload = () => { imgOK[n] = true; clearTimeout(imgTimer); imgTimer = setTimeout(render, 50); }; im.src = imgSrc(n); });
+  }
   function ratioAt(curve, p) {
     if (p < curve[0][0]) return null;
     for (let i = 1; i < curve.length; i++) if (curve[i][0] >= p) {
@@ -176,7 +223,7 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
     }
     return 1;
   }
-  function gridAt(g, p) {           // 1%-grid past curve
+  function gridAt(g, p) {
     if (!g) return null;
     const i = Math.floor(p), j = Math.min(100, Math.ceil(p));
     if (g[i] == null || g[j] == null) return null;
@@ -213,15 +260,13 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
       const pts = ev ? (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]) : [];
       r.pts = pts.map(p => [p[1], p[ci], p[0]]);
       const lp = pts[pts.length - 1];
+      if (ref) for (const e of ref.events) {
+        const g = ((ref.past[name] || {})[e.key] || {})[rk];
+        const pv = lp ? gridAt(g, lp[1]) : null;
+        r.cmp.push({ label: e.label, now: pv, final: g ? g[100] : null, ratio: pv && lp ? lp[ci] / pv : null });
+      }
       if (lp) {
         r.border = lp[ci]; r.pct = lp[1]; r.time = lp[0];
-        if (ref) {
-          for (const e of ref.events) {
-            const g = ((ref.past[name] || {})[e.key] || {})[rk];
-            const pv = gridAt(g, r.pct);
-            r.cmp.push({ label: e.label, now: pv, final: g ? g[100] : null, ratio: pv ? r.border / pv : null });
-          }
-        }
         if (lp[1] >= 99.99) { r.pred = r.safe = r.border; r.final = true; }
         else if (ref) {
           const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
@@ -232,8 +277,6 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
           }
         }
         if (r.safe != null) { r.need = Math.max(0, r.safe - (r.my || 0)); r.hours = S.rate ? r.need / S.rate : null; }
-      } else if (ref) {
-        for (const e of ref.events) { const g = ((ref.past[name] || {})[e.key] || {})[rk]; r.cmp.push({ label: e.label, now: null, final: g ? g[100] : null, ratio: null }); }
       }
       return r;
     });
@@ -251,110 +294,120 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
 
   // ---------- render ----------
   function render() {
-    if (document.activeElement && document.activeElement.matches("dialog input")) return;   // don't redraw under typing
+    if (document.activeElement && document.activeElement.matches("dialog input")) return;
     ctx = compute(); rows = ctx.rows;
     const { ev, leftH, avail, used } = ctx, now = new Date();
-    const banner = [];
-    if (loadErr) banner.push(`<div class="banner">読み込めませんでした（${esc(loadErr)}）。しばらくして「更新」を押してください。</div>`);
+    const notes = [];
+    if (loadErr) notes.push(`<div class="notice warn">記録を読み込めませんでした（${esc(loadErr)}）。少し待ってから「更新する」を押してください。</div>`);
     let lastPct = null;
     if (!ev) {
       $("#eventLine").textContent = "開催中のイベントの記録はまだありません";
-      banner.push(`<div class="banner info">イベントが始まって最初の投稿が届くと、カードに今のボーダーが入ります（15分ごとに記録）。カードを開くと、過去2回の推移は今でも見られます。</div>`);
+      $("#updated").textContent = "";
+      notes.push(`<div class="notice">イベントが始まって最初の投稿が届くと、カードに今のボーダーが入ります。それまでは前回の最終ボーダーを出しています。カードを開くと、過去2回の推移が見られます。</div>`);
     } else {
       const all = Object.values(ev.idols).flat();
       const lastT = all.map(p => p[0]).sort().pop(); lastPct = Math.max(...all.map(p => p[1]));
       const age = lastT ? Math.round((now - jst(lastT)) / 60000) : null;
-      $("#eventLine").innerHTML = `${esc(ev.title)}　最新 <b class="num">${esc((lastT || "").slice(5))}</b>${age != null ? `（${age}分前）` : ""}`;
-      if (age != null && age > 45) banner.push(`<div class="banner">最新の記録が${age}分前です。記録が止まっているかもしれません。</div>`);
+      $("#eventLine").textContent = ev.title;
+      $("#updated").textContent = lastT ? `${lastT.slice(5).replace("-", "/")} の記録（${age}分前）` : "";
+      if (age != null && age > 45) notes.push(`<div class="notice warn">最新の記録が${age}分前です。記録が止まっている可能性があります。</div>`);
     }
-    $("#banner").innerHTML = banner.join("");
+    $("#notice").innerHTML = notes.join("");
 
     const counted = rows.filter(r => r.status !== "off");
     const got = counted.filter(r => r.status === "ok" || r.status === "plan").length;
     $("#stats").innerHTML = [
-      ["取れる見込み", ev ? `${got}/${counted.length}人` : "—"],
-      ["経過率", lastPct != null ? lastPct.toFixed(1) + "%" : "—"],
-      ["終了まで", ev ? hrs(leftH) : "—"],
-      ["必要／遊べる", ev ? `${hh(used)}／${hh(avail)}` : "—"],
-    ].map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v num">${v}</span></div>`).join("");
+      ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
+      ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
+      ["終了まで", ev ? `${leftH.toFixed(0)}<small>時間</small>` : "—"],
+      ["必要／遊べる", ev && avail != null ? `${used.toFixed(0)}<small>h</small>／${avail.toFixed(0)}<small>h</small>` : "—"],
+    ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v n">${v}</span></div>`).join("");
 
-    const groups = [["100", "100位を狙う"], ["500", "500位を狙う"], ["off", "狙わない"]];
-    $("#sections").innerHTML = groups.map(([t, label]) => {
-      const rs = rows.filter(r => r.tgt === t); if (!rs.length) return "";
+    $("#units").innerHTML = UNITS.map(u => {
+      const rs = u.members.map(m => rows.find(r => r.name === m)).sort((a, b) => (a.tgt === "100" ? 0 : 1) - (b.tgt === "100" ? 0 : 1));
       const bad = rs.filter(r => r.status === "no").length;
-      return `<section class="sec s${t}"><h2>${t !== "off" ? `<span class="badge b${t}">${t}</span>` : ""}${label}<span class="cnt">${rs.length}人${bad ? `・足りない ${bad}人` : ""}</span></h2>
-        <div class="grid">${rs.map(card).join("")}</div></section>`;
+      return `<section class="unit" style="--u:${u.color}${u.text ? `;--ut:${u.text}` : ""}">
+        <div class="ribbon"><b>${esc(u.name)}</b>${u.name !== u.kana ? `<span>${esc(u.kana)}</span>` : ""}${bad ? `<span class="alert">足りない ${bad}人</span>` : ""}</div>
+        <div class="members">${rs.map(card).join("")}</div></section>`;
     }).join("");
 
-    // today
     let budget = Math.min(ctx.hpd || 0, leftH || 0); const items = [];
     for (const r of rows.filter(r => r.status === "plan").sort((a, b) => a.hours - b.hours)) {
       if (budget <= 0) break; const h = Math.min(budget, r.hours); budget -= h;
-      items.push(`<li><b>${esc(r.name)}</b> <span class="num">${hrs(h)}</span>${h < r.hours - 1e-9 ? `（あと${hrs(r.hours - h)}）` : ""}</li>`);
+      items.push(`<li>${esc(r.name)} <span class="n">${hrs(h)}</span>${h < r.hours - 1e-9 ? `（あと${hrs(r.hours - h)}）` : ""}</li>`);
     }
-    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">安全ラインまで、必要時間が短い順に1日分を割り当てています。</p>` : `<p class="note">今日やることはありません（自分のスコアが未入力なら、まずカードを開いて入れてください）。</p>`;
+    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">安全ラインまで、必要な時間が短い順に、1日に遊べる時間を割り当てています。</p>`
+      : `<p class="note">${ev ? "自分のスコアを入れると、ここに今日の配分が出ます。" : "イベントが始まると、ここに今日の配分が出ます。"}</p>`;
 
     if (openName && $("#sheet").open) fillSheet(openName);
   }
 
   function card(r) {
-    let big, sm;
-    if (r.status === "off") { big = `<span class="k">今</span>${man(r.border)}`; sm = ""; }
-    else if (r.border == null) { big = `<span class="k">前回最終</span>${man((r.cmp[0] || {}).final)}`; sm = "データ待ち"; }
-    else if (r.status === "ok") { big = `安全圏`; sm = `自分 ${man(r.my)}`; }
-    else if (r.my != null) { big = `<span class="k">あと</span>${man(r.need)}`; sm = `${hrs(r.hours)}`; }
-    else { big = `<span class="k">安全</span>${man(r.safe)}`; sm = `今 ${man(r.border)}`; }
+    const top = r.tgt === "100";
+    const rank = `<span class="rank">${r.tgt === "off" ? "—" : r.tgt + "位"}</span>`;
+    let fig, aux;
+    if (r.border == null) { fig = `<span class="k">前回最終</span>${man((r.cmp[0] || {}).final)}`; aux = ""; }
+    else if (r.status === "off") { fig = `<span class="k">今</span>${man(r.border)}`; aux = ""; }
+    else if (r.status === "ok") { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `自分 ${man(r.my)}`; }
+    else if (r.my != null) { fig = `<span class="k">あと</span>${man(r.need)}`; aux = `${hrs(r.hours)}`; }
+    else { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `今 ${man(r.border)}`; }
     const c = r.cmp[0];
-    const vs = c && c.ratio ? `・前回 <span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>` : "";
-    return `<button class="card ${r.status}" type="button" data-open="${esc(r.name)}" aria-label="${esc(r.name)}の詳細">
-      <span class="hd"><span class="nm">${esc(r.name)}</span><span class="st ${r.status}">${STATUS[r.status]}</span></span>
-      <span class="big num">${big}</span>
-      <span class="sm">${sm}${r.status !== "off" && r.border != null ? vs : ""}</span></button>`;
+    if (r.border != null && c && c.ratio) aux += `${aux ? "、" : ""}前回の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>`;
+    return `<button class="card ${r.status}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
+      <span class="who">${top ? "" : face(r.name)}<b>${esc(r.name)}</b>${top ? rank : ""}</span>
+      <span class="line2"><span class="state ${r.status}">${STATE[r.status]}</span>${top ? "" : rank}</span>
+      <span class="fig n">${fig}</span>
+      <span class="aux">${aux}</span>
+      ${top ? face(r.name) : ""}</button>`;
   }
 
   // ---------- detail ----------
   function fillSheet(name) {
     const r = rows.find(x => x.name === name); if (!r) return;
+    const u = UNIT_OF[name];
     const tg = ["100", "500", "off"].map(t => `<button type="button" data-tgt="${t}" class="${r.tgt === t ? "on" : ""}">${t === "off" ? "狙わない" : t + "位"}</button>`).join("");
-    const cmpRows = r.cmp.map(c => `<tr><td>${esc(c.label)}</td><td class="num">${r.pct != null ? man(c.now) : "—"}</td><td class="num ${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</td><td class="num">${man(c.final)}</td></tr>`).join("");
+    const cmpRows = r.cmp.map(c => `<tr><td>${esc(c.label)}</td><td class="n">${r.pct != null ? man(c.now) : "—"}</td><td class="n ${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</td><td class="n">${man(c.final)}</td></tr>`).join("");
     $("#sheetBody").innerHTML = `
-      <div class="hd"><h3 id="sheetTitle">${esc(r.name)}</h3><button type="button" data-close>閉じる</button></div>
-      <div class="hd"><span class="st ${r.status}" style="font-size:.85rem">${STATUS[r.status]}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
-      <div class="kv">
-        <div><span class="k">今の${r.rk}位${r.pct != null ? `（${r.pct.toFixed(1)}%）` : ""}</span><span class="v num">${man(r.border)}</span></div>
-        <div><span class="k">予測最終</span><span class="v num">${man(r.pred)}</span></div>
-        <div><span class="k">安全ライン</span><span class="v num safe">${man(r.safe)}</span></div>
-        <div><span class="k">最終までの倍率</span><span class="v num">${r.lo != null ? `${xr(r.lo)}〜${r.hi.toFixed(2)}` : r.final ? "確定" : "—"}</span></div>
-      </div>
-      <div class="my"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
-        <span>${r.need != null ? (r.need > 0 ? `あと <b class="num">${man(r.need)}</b>（${hrs(r.hours)}）` : "安全ラインを超えています") : ""}</span></div>
-      <div class="legend">
-        <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
-        <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
-        <span style="color:var(--s1)"><i style="border-top:8px solid;opacity:.18"></i>予測の幅</span>
-        <span><i style="border-top-style:dashed;color:var(--bad)"></i>安全ライン</span>${r.my ? `<span><i style="color:var(--fg);border-top-style:dotted"></i>自分</span>` : ""}
-      </div>
-      <div class="chart" id="chart">${chartSvg(r)}<div class="tip" id="tip"></div></div>
-      <table class="cmp"><thead><tr><th>過去の開催</th><th>同じ経過率</th><th>今回は</th><th>最終</th></tr></thead><tbody>${cmpRows}</tbody></table>
-      <p class="note">「今回は」= 今のボーダー ÷ 過去の同じ経過率のボーダー。グラフは押さえたまま横に動かすと、その時点の数字が出ます。</p>`;
-    bindChart(r);
+      <div class="sheet-top" style="--u:${u.color}">${face(name)}
+        <h3 id="sheetTitle">${esc(name)}<small>${esc(u.name)}</small></h3>
+        <button type="button" class="close" data-close>閉じる</button></div>
+      <div class="sheet-body">
+        <div class="bar"><span class="state ${r.status}" style="font-size:.9rem">${STATE[r.status]}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
+        <div class="facts">
+          <div><span class="k">今の${r.rk}位${r.pct != null ? `（${r.pct.toFixed(1)}%）` : ""}</span><span class="v n">${man(r.border)}</span></div>
+          <div><span class="k">予測最終</span><span class="v n">${man(r.pred)}</span></div>
+          <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
+          <div><span class="k">最終までの倍率</span><span class="v n">${r.lo != null ? `${xr(r.lo)}〜${r.hi.toFixed(2)}` : r.final ? "確定" : "—"}</span></div>
+        </div>
+        <div class="myrow"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
+          <span>${r.need != null ? (r.need > 0 ? `あと <b class="n">${man(r.need)}</b>（${hrs(r.hours)}）` : "安全ラインを超えています") : ""}</span></div>
+        <div class="legend">
+          <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
+          <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
+          <span style="color:var(--s1)"><i style="border-top:9px solid;opacity:.2"></i>予測の幅</span>
+          <span><i style="border-top-style:dashed;color:var(--no)"></i>安全ライン</span>${r.my ? `<span><i style="color:var(--ink);border-top-style:dotted"></i>自分</span>` : ""}
+        </div>
+        <div class="chart" id="chart">${chartSvg(r)}<div class="tip" id="tip"></div></div>
+        <table class="cmp"><thead><tr><th>過去の開催</th><th>同じ経過率</th><th>今回は</th><th>最終</th></tr></thead><tbody>${cmpRows}</tbody></table>
+        <p class="note">「今回は」は、今のボーダーを、過去の同じ経過率のボーダーで割った倍率です。グラフを押さえたまま横に動かすと、その時点の数字が出ます。</p>
+      </div>`;
+    bindChart();
   }
 
   let geo = null;
   function chartSvg(r) {
     const W = 340, H = 200, L = 38, R = 12, T = 8, B = 20;
-    const past = r.cmp.map((c, i) => {
-      const g = ((ref && ref.past[r.name]) || {})[ref ? ref.events[i].key : ""];
-      const arr = g ? g[r.rk] : null;
+    const past = (ref ? ref.events : []).map(e => {
+      const arr = (((ref.past[r.name] || {})[e.key]) || {})[r.rk];
       return arr ? arr.map((v, x) => v == null ? null : [x, v]).filter(Boolean) : [];
     });
     const cur = r.pts.map(p => [p[0], p[1]]);
-    let band = [];
+    const band = [];
     if (ref && r.border != null && !r.final) {
       const curves = ref.refs.filter(x => x.rank === r.rk);
       const xs = [r.pct]; for (let x = Math.floor(r.pct) + 1; x <= 100; x++) xs.push(x);
       for (const x of xs) {
-        // each past curve projects: border now × (its ratio to final now) ÷ (its ratio to final at x)
+        // each past curve projects: border now x (its ratio to final now) / (its ratio to final at x)
         const vs = curves.map(c => { const a = ratioAt(c.curve, r.pct), b = ratioAt(c.curve, x); return a && b ? r.border * a / b : null; }).filter(v => v != null);
         if (vs.length) band.push([x, Math.min(...vs), q(vs, .5), Math.max(...vs)]);
       }
@@ -362,41 +415,40 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
     const ys = [...cur, ...past.flat()].map(p => p[1]).concat(band.map(b => b[3]), [r.safe, r.my].filter(v => v));
     const y1 = (ys.length ? Math.max(...ys) : 1) * 1.06;
     const sx = x => L + x / 100 * (W - L - R), sy = y => H - B - y / y1 * (H - T - B);
-    geo = { W, H, L, R, T, B, sx, sy, y1, cur, past, band };
+    geo = { W, L, R, sx, cur, past, band };
     const path = pts => pts.map((p, i) => (i ? "L" : "M") + sx(p[0]).toFixed(1) + "," + sy(p[1]).toFixed(1)).join("");
-    let g = "";
+    let s = "";
     const step = niceStep(y1 / 4);
-    for (let y = 0; y <= y1; y += step) g += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--line)"/><text x="${L - 4}" y="${sy(y) + 3}" text-anchor="end">${y ? Math.round(y / 1e4) + "万" : 0}</text>`;
-    for (const x of [0, 25, 50, 75, 100]) g += `<text x="${sx(x)}" y="${H - 6}" text-anchor="${x === 100 ? "end" : x === 0 ? "start" : "middle"}">${x}%</text>`;
-    let s = g;
+    for (let y = 0; y <= y1; y += step) s += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--rule)"/><text x="${L - 4}" y="${sy(y) + 3}" text-anchor="end">${y ? Math.round(y / 1e4) + "万" : 0}</text>`;
+    for (const x of [0, 25, 50, 75, 100]) s += `<text x="${sx(x)}" y="${H - 6}" text-anchor="${x === 100 ? "end" : x === 0 ? "start" : "middle"}">${x}%</text>`;
     if (band.length > 1) {
       s += `<path d="${band.map((b, i) => (i ? "L" : "M") + sx(b[0]).toFixed(1) + "," + sy(b[3]).toFixed(1)).join("")}${[...band].reverse().map(b => "L" + sx(b[0]).toFixed(1) + "," + sy(b[1]).toFixed(1)).join("")}Z" fill="var(--s1)" opacity=".16"/>`;
       s += `<path d="${path(band.map(b => [b[0], b[2]]))}" fill="none" stroke="var(--s1)" stroke-width="1.5" stroke-dasharray="2 3"/>`;
     }
     if (past[1] && past[1].length) s += `<path d="${path(past[1])}" fill="none" stroke="var(--s3)" stroke-width="2" stroke-dasharray="1 3" stroke-linecap="round"/>`;
     if (past[0] && past[0].length) s += `<path d="${path(past[0])}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-dasharray="5 3"/>`;
-    if (r.safe) s += `<line x1="${L}" x2="${W - R}" y1="${sy(r.safe)}" y2="${sy(r.safe)}" stroke="var(--bad)" stroke-width="1.2" stroke-dasharray="5 4"/><text x="${L + 3}" y="${sy(r.safe) - 3}" style="fill:var(--bad)">安全 ${man(r.safe)}</text>`;
-    if (r.my) s += `<line x1="${L}" x2="${W - R}" y1="${sy(r.my)}" y2="${sy(r.my)}" stroke="var(--fg)" stroke-width="1.2" stroke-dasharray="1 3"/><text x="${W - R - 3}" y="${sy(r.my) - 3}" text-anchor="end" style="fill:var(--fg)">自分 ${man(r.my)}</text>`;
+    if (r.safe) s += `<line x1="${L}" x2="${W - R}" y1="${sy(r.safe)}" y2="${sy(r.safe)}" stroke="var(--no)" stroke-width="1.2" stroke-dasharray="5 4"/><text x="${L + 3}" y="${sy(r.safe) - 3}" style="fill:var(--no)">安全 ${man(r.safe)}</text>`;
+    if (r.my) s += `<line x1="${L}" x2="${W - R}" y1="${sy(r.my)}" y2="${sy(r.my)}" stroke="var(--ink)" stroke-width="1.2" stroke-dasharray="1 3"/><text x="${W - R - 3}" y="${sy(r.my) - 3}" text-anchor="end" style="fill:var(--ink)">自分 ${man(r.my)}</text>`;
     if (cur.length > 1) s += `<path d="${path(cur)}" fill="none" stroke="var(--s1)" stroke-width="2.4"/>`;
-    if (cur.length) { const p = cur[cur.length - 1]; s += `<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="4" fill="var(--s1)" stroke="var(--panel)" stroke-width="2"/>`; }
-    s += `<line id="xh" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-width="1" visibility="hidden"/><rect id="hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+    if (cur.length) { const p = cur[cur.length - 1]; s += `<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="4" fill="var(--s1)" stroke="var(--paper)" stroke-width="2"/>`; }
+    s += `<line id="xh" y1="${T}" y2="${H - B}" stroke="var(--ink-2)" stroke-width="1" visibility="hidden"/><rect id="hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(r.name)}の${r.rk}位ボーダーの推移">${s}</svg>`;
   }
   function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))); const n = raw / p; return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p; }
   function lerp(pts, x) { if (!pts.length || x < pts[0][0] || x > pts[pts.length - 1][0]) return null; for (let i = 1; i < pts.length; i++) if (pts[i][0] >= x) { const a = pts[i - 1], b = pts[i]; return b[0] > a[0] ? a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]) : b[1]; } return pts[pts.length - 1][1]; }
-  function bindChart(r) {
+  function bindChart() {
     const svg = $("#chart svg"), hit = $("#hit"), xh = $("#xh"), tip = $("#tip"); if (!svg || !geo) return;
     const show = e => {
       const box = svg.getBoundingClientRect(), k = geo.W / box.width;
       const x = Math.max(0, Math.min(100, ((e.clientX - box.left) * k - geo.L) / (geo.W - geo.L - geo.R) * 100));
       xh.setAttribute("x1", geo.sx(x)); xh.setAttribute("x2", geo.sx(x)); xh.setAttribute("visibility", "visible");
       const lines = [];
-      const c = lerp(geo.cur, x); if (c != null) lines.push(`<span style="color:var(--s1)">今回</span> <b>${man(c)}</b>`);
-      const b = lerp(geo.band.map(v => [v[0], v[2]]), x); if (c == null && b != null) lines.push(`<span style="color:var(--s1)">予測</span> <b>${man(b)}</b>（${man(lerp(geo.band.map(v => [v[0], v[1]]), x))}〜${man(lerp(geo.band.map(v => [v[0], v[3]]), x))}）`);
-      ["2.5周年", "2周年"].forEach((lab, i) => { const v = lerp(geo.past[i] || [], x); if (v != null) lines.push(`<span style="color:var(--s${i + 2})">${lab}</span> <b>${man(v)}</b>`); });
-      tip.innerHTML = `<div class="num">${x.toFixed(1)}%</div>` + lines.join("<br>");
+      const c = lerp(geo.cur, x); if (c != null) lines.push(`<span style="color:var(--s1)">今回</span> <b class="n">${man(c)}</b>`);
+      const b = lerp(geo.band.map(v => [v[0], v[2]]), x); if (c == null && b != null) lines.push(`<span style="color:var(--s1)">予測</span> <b class="n">${man(b)}</b>（${man(lerp(geo.band.map(v => [v[0], v[1]]), x))}〜${man(lerp(geo.band.map(v => [v[0], v[3]]), x))}）`);
+      (ref ? ref.events : []).forEach((e, i) => { const v = lerp(geo.past[i] || [], x); if (v != null) lines.push(`<span style="color:var(--s${i + 2})">${esc(e.label)}</span> <b class="n">${man(v)}</b>`); });
+      tip.innerHTML = `<div class="n">${x.toFixed(1)}%</div>` + lines.join("<br>");
       tip.style.display = "block";
-      const px = (geo.sx(x) / k), w = tip.offsetWidth;
+      const px = geo.sx(x) / k, w = tip.offsetWidth;
       tip.style.left = Math.max(0, Math.min(box.width - w, px + 10 > box.width - w ? px - w - 10 : px + 10)) + "px"; tip.style.top = "6px";
     };
     const hide = () => { xh.setAttribute("visibility", "hidden"); tip.style.display = "none"; };
@@ -413,7 +465,7 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
   $("#sheet").addEventListener("close", () => { openName = null; render(); });
 
   // ---------- events ----------
-  $("#sections").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
+  $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
   const put = (id, v) => { $(id).value = v ?? ""; };
   put("#basis", S.basis); put("#margin", S.margin); put("#rate", full(S.rate)); put("#hpd", S.hpd);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
@@ -423,6 +475,7 @@ table.cmp th:first-child,table.cmp td:first-child{text-align:left}
   $("#reload").addEventListener("click", load);
   document.addEventListener("visibilitychange", () => { if (!document.hidden && (!loadedAt || Date.now() - loadedAt > 60000)) load(); });
   setInterval(() => { if (!document.hidden) load(); }, 3 * 60 * 1000);
+  probeImages();
   load();
 })();
 </script>
