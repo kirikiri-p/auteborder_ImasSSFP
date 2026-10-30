@@ -1,0 +1,43 @@
+name: collect borders
+
+on:
+  schedule:
+    # Every 15 minutes, off the top of the hour (runs on the hour are delayed most).
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main   # always the latest data, even on "Re-run jobs"
+
+      - name: Read the border channels
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          GUILD_ID: "1565604651582234685"
+          START_JST: "2026-10-31 12:00"
+        run: python3 collect.py
+
+      - name: Commit new data
+        run: |
+          git config user.name "border-collector"
+          git config user.email "border-collector@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "no new posts"
+          else
+            git commit -m "borders $(TZ=Asia/Tokyo date '+%Y-%m-%d %H:%M')"
+            # If main moved meanwhile, rebase once; on a conflict the next run reads the posts again.
+            git push || { git pull --rebase origin main && git push; }
+          fi

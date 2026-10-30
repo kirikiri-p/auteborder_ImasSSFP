@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#12131b">
+<title>シャニソン ボーダー速報</title>
+<style>
+:root{
+  --bg:#f3f4f8; --panel:#fff; --fg:#1b1d2a; --muted:#646a82; --line:#dcdfea;
+  --accent:#3b55c9; --accent-soft:#e6eafb;
+  --ok:#1f7a4d; --ok-soft:#dff3e8; --warn:#9a6200; --warn-soft:#fbefd6; --bad:#b0342c; --bad-soft:#f9e1de;
+  --num:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#12131b; --panel:#1b1d28; --fg:#e7e9f2; --muted:#9aa0b8; --line:#2d3042;
+  --accent:#8ea0f2; --accent-soft:#252b4a;
+  --ok:#6fd3a0; --ok-soft:#173326; --warn:#f0be63; --warn-soft:#3a2d12; --bad:#f08a80; --bad-soft:#3d1c1a;}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif}
+.wrap{max-width:760px;margin:0 auto;padding:14px max(12px,env(safe-area-inset-right)) 40px max(12px,env(safe-area-inset-left));display:flex;flex-direction:column;gap:12px}
+h1{font-size:1.15rem;margin:0}
+.sub{color:var(--muted);font-size:.8rem;margin:0}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+button{font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 11px;cursor:pointer;white-space:nowrap;flex:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.stat{border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.stat .k{display:block;font-size:.68rem;color:var(--muted)}
+.stat .v{display:block;font-size:1.05rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat.hi{border-color:var(--accent);background:var(--accent-soft)}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,1fr)}}
+.banner{border-radius:8px;padding:8px 10px;font-size:.85rem}
+.banner.warn{background:var(--warn-soft);color:var(--warn)}
+.banner.bad{background:var(--bad-soft);color:var(--bad)}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:1fr auto;gap:2px 10px}
+.card.no{border-left-color:var(--bad)} .card.plan{border-left-color:var(--accent)} .card.ok{border-left-color:var(--ok)} .card.off{opacity:.5}
+.name{font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tag{font-size:.68rem;font-weight:700;border-radius:999px;padding:0 7px;border:1px solid var(--line);color:var(--muted)}
+.tag.t100{border-color:var(--accent);color:var(--accent)}
+.chip{font-size:.7rem;font-weight:700;border-radius:999px;padding:1px 8px;white-space:nowrap;align-self:start}
+.chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.plan{background:var(--accent-soft);color:var(--accent)}
+.chip.no{background:var(--bad-soft);color:var(--bad)} .chip.na{background:var(--bg);color:var(--muted)}
+.line{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:2px 14px;font-size:.85rem;align-items:baseline}
+.line .k{color:var(--muted);font-size:.72rem;margin-right:3px}
+.line b{font-weight:700}
+.safe{color:var(--bad)}
+.card.ok .safe{color:var(--ok)}
+.my{grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:.85rem;flex-wrap:wrap}
+.my input{width:8.5em;font:inherit;font-family:var(--num);text-align:right;padding:3px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.spark{grid-column:1/-1;height:30px;width:100%}
+.spark path{fill:none;stroke:var(--accent);stroke-width:1.6}
+.spark line{stroke:var(--ok);stroke-width:1;stroke-dasharray:3 3}
+details>summary{cursor:pointer;font-size:.85rem;color:var(--muted);list-style:none}
+details>summary::before{content:"▸ "} details[open]>summary::before{content:"▾ "}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:10px}
+.form label{display:flex;flex-direction:column;gap:3px;font-size:.75rem;color:var(--muted)}
+.form input,.form select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.targets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:10px;font-size:.82rem}
+.targets label{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.targets select{font:inherit;font-size:.8rem;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 4px}
+ol{margin:6px 0 0;padding-left:1.4em;font-size:.88rem}
+.note{font-size:.75rem;color:var(--muted);margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>シャニソン ボーダー速報</h1>
+      <p class="sub" id="eventLine">読み込み中…</p>
+    </div>
+    <button id="reload" type="button">更新</button>
+  </header>
+
+  <div id="banner"></div>
+  <section class="stats" id="stats"></section>
+
+  <details class="panel" id="todayBox">
+    <summary>今日の配分</summary>
+    <div id="today"></div>
+  </details>
+
+  <section class="list" id="list"></section>
+
+  <details class="panel">
+    <summary>設定（この端末に保存）</summary>
+    <div class="form">
+      <label>安全ラインの基準
+        <select id="basis">
+          <option value="max">過去でいちばん伸びた例</option>
+          <option value="p90">上位10%の伸び</option>
+          <option value="median">ふつうの伸び（中央値）</option>
+        </select>
+      </label>
+      <label>さらに上乗せ（%）<input id="margin" inputmode="decimal"></label>
+      <label>時速（1時間あたり）<input id="rate" inputmode="numeric"></label>
+      <label>1日に遊べる時間<input id="hpd" inputmode="decimal"></label>
+    </div>
+    <div class="targets" id="targets"></div>
+  </details>
+
+  <p class="note">ボーダーは自分のDiscordサーバーに流れてくるBotの投稿を15分ごとに記録したもの。予測 = 今のボーダー × 過去2回（2周年・2.5周年）の同じ経過率から最終までの倍率の中央値。安全ライン = 選んだ基準の倍率 ＋ 上乗せ。経過率が低いうちは予測のぶれが大きい。</p>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const IDOLS = ["櫻木真乃","風野灯織","八宮めぐる","月岡恋鐘","田中摩美々","白瀬咲耶","三峰結華","幽谷霧子","小宮果穂","園田智代子","西城樹里","杜野凛世","有栖川夏葉","大崎甘奈","大崎甜花","桑山千雪","芹沢あさひ","黛冬優子","和泉愛依","浅倉透","樋口円香","福丸小糸","市川雛菜","七草にちか","緋田美琴","斑鳩ルカ","鈴木羽那","郁田はるき"];
+  const TOP100 = ["幽谷霧子","和泉愛依","小宮果穂","大崎甘奈","八宮めぐる","市川雛菜","緋田美琴","郁田はるき"];
+  const COL = { "100": 5, "500": 6 };      // [time, pct, 1st, 12th, 50th, 100th, 500th]
+  const KEY = "shanison-border-v1";
+
+  // ---------- settings ----------
+  const defaults = () => ({ basis: "max", margin: 0, rate: 750000, hpd: 17,
+    target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {} });
+  let S = defaults();
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) S = Object.assign(defaults(), s, { target: Object.assign(defaults().target, s.target || {}) }); } catch (e) {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+  // ---------- helpers ----------
+  const num = v => { if (v == null) return null; let s = String(v).replace(/[,\s]/g, ""); let k = 1; if (/万$/.test(s)) { k = 1e4; s = s.slice(0, -1); } const x = parseFloat(s); return isFinite(x) ? x * k : null; };
+  const man = n => n == null || !isFinite(n) ? "—" : n >= 1e4 ? (n / 1e4).toFixed(n >= 1e7 ? 0 : 1) + "万" : Math.round(n).toLocaleString("ja-JP");
+  const full = n => n == null || !isFinite(n) ? "" : Math.round(n).toLocaleString("ja-JP");
+  const hrs = h => h == null || !isFinite(h) ? "—" : h <= 0 ? "0" : h < 1 ? Math.max(1, Math.round(h * 60)) + "分" : h.toFixed(1) + "時間";
+  const hh = h => h == null || !isFinite(h) ? "—" : h.toFixed(h < 10 ? 1 : 0) + "h";
+  const jst = s => new Date(s.replace(" ", "T") + ":00+09:00");
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const q = (a, p) => { const s = [...a].sort((x, y) => x - y); const i = (s.length - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return s[lo] + (s[hi] - s[lo]) * (i - lo); };
+  function ratioAt(curve, p) {
+    if (p < curve[0][0]) return null;
+    for (let i = 1; i < curve.length; i++) if (curve[i][0] >= p) {
+      const a = curve[i - 1], b = curve[i]; return b[0] > a[0] ? a[1] + (b[1] - a[1]) * (p - a[0]) / (b[0] - a[0]) : b[1];
+    }
+    return 1;
+  }
+
+  // ---------- data ----------
+  let points = null, ref = null, loadedAt = null, loadErr = null;
+  async function load() {
+    try {
+      const bust = "?t=" + Date.now();
+      const tasks = [fetch("data/points.json" + bust, { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
+      if (!ref) tasks.push(fetch("data/reference.json", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
+      const [p, r] = await Promise.all(tasks);
+      points = p; if (r) ref = r; loadedAt = new Date(); loadErr = null;
+    } catch (e) { loadErr = e.message || String(e); }
+    render();
+  }
+
+  function pickEvent() {
+    if (!points) return null;
+    const evs = Object.entries(points).sort((a, b) => jst(b[1].start) - jst(a[1].start));
+    const live = evs.find(([, e]) => jst(e.end) > new Date());
+    return live ? { key: live[0], ev: live[1], live: true } : evs.length ? { key: evs[0][0], ev: evs[0][1], live: false } : null;
+  }
+
+  // ---------- render ----------
+  let pending = false;
+  function render() {
+    // Don't rebuild the list under someone typing their score; redo it when they leave the box.
+    if (document.activeElement && document.activeElement.matches("#list input")) {
+      if (!pending) { pending = true; document.activeElement.addEventListener("blur", () => { pending = false; setTimeout(render); }, { once: true }); }
+      return;
+    }
+    const now = new Date();
+    const pick = pickEvent();
+    const banner = [];
+    if (loadErr) banner.push(`<div class="banner bad">読み込めませんでした（${esc(loadErr)}）。しばらくして「更新」を押してください。</div>`);
+    if (!pick) {
+      $("#eventLine").textContent = "記録はまだありません";
+      $("#banner").innerHTML = banner.join("") + `<div class="banner warn">イベントが始まって最初の投稿が届くと、ここにボーダーが並びます（15分ごとに記録）。</div>`;
+      $("#stats").innerHTML = $("#list").innerHTML = $("#today").innerHTML = "";
+      renderTargets(); return;
+    }
+    const { ev, live } = pick;
+    if (!live) banner.push(`<div class="banner warn">開催中のイベントがないので、終わったイベントを表示しています。</div>`);
+
+    // latest snapshot time across idols
+    const allPts = Object.values(ev.idols).flat();
+    const lastT = allPts.map(p => p[0]).sort().pop();
+    const lastPct = Math.max(...allPts.map(p => p[1]));
+    const ageMin = lastT ? Math.round((now - jst(lastT)) / 60000) : null;
+    if (live && ageMin != null && ageMin > 45) banner.push(`<div class="banner warn">最新の記録が${ageMin}分前です。記録が止まっているかもしれません。</div>`);
+    $("#banner").innerHTML = banner.join("");
+    const leftH = Math.max(0, (jst(ev.end) - now) / 3600000);
+    $("#eventLine").innerHTML = `${esc(ev.title)}　最新 <b class="num">${esc((lastT || "").slice(5))}</b>${ageMin != null ? `（${ageMin}分前）` : ""}`;
+
+    // rows
+    const rows = IDOLS.map(name => {
+      const tgt = S.target[name] || "500";
+      const r = { name, tgt, my: num(S.my[name]), status: "na" };
+      if (tgt === "off") { r.status = "off"; return r; }
+      const ci = COL[tgt];
+      const pts = (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]);
+      r.pts = pts.map(p => [p[1], p[ci]]);
+      const lp = pts[pts.length - 1];
+      if (!lp) return r;
+      r.border = lp[ci]; r.pct = lp[1];
+      if (lp[1] >= 99.99) { r.pred = r.safe = r.border; r.final = true; }
+      else if (ref) {
+        const rs = ref.refs.filter(x => x.rank === tgt).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
+        if (rs.length) {
+          r.lo = Math.min(...rs); r.hi = Math.max(...rs); r.med = q(rs, .5);
+          const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(rs, .9) : r.med;
+          r.pred = r.border * r.med; r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
+        }
+      }
+      if (r.safe != null) { r.need = Math.max(0, r.safe - (r.my || 0)); r.hours = S.rate ? r.need / S.rate : null; }
+      return r;
+    });
+
+    // plan: cheapest first within the playable hours
+    const hpd = num(S.hpd);
+    const avail = hpd != null ? Math.min(leftH, hpd * leftH / 24) : null;
+    let used = 0;
+    [...rows].filter(r => r.status !== "off" && r.safe != null).sort((a, b) => a.hours - b.hours).forEach(r => {
+      if (r.need === 0) r.status = "ok";
+      else if (r.hours == null) r.status = "na";
+      else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
+      else r.status = "no";
+    });
+    const rank = { no: 0, plan: 1, na: 2, ok: 3, off: 4 };
+    rows.sort((a, b) => rank[a.status] - rank[b.status] || (a.tgt === b.tgt ? 0 : a.tgt === "100" ? -1 : 1) || (a.hours ?? 0) - (b.hours ?? 0));
+
+    const counted = rows.filter(r => r.status !== "off");
+    const okN = counted.filter(r => r.status === "ok").length, planN = counted.filter(r => r.status === "plan").length;
+    $("#stats").innerHTML = [
+      `<div class="stat hi"><span class="k">取れる見込み</span><span class="v num">${okN + planN}/${counted.length}人</span></div>`,
+      `<div class="stat"><span class="k">経過率</span><span class="v num">${lastPct.toFixed(1)}%</span></div>`,
+      `<div class="stat"><span class="k">終了まで</span><span class="v num">${hrs(leftH)}</span></div>`,
+      `<div class="stat"><span class="k">必要／遊べる</span><span class="v num">${hh(used)}／${hh(avail)}</span></div>`,
+    ].join("");
+
+    // today
+    let budget = Math.min(hpd || 0, leftH); const items = [];
+    for (const r of [...rows].filter(r => r.status === "plan").sort((a, b) => a.hours - b.hours)) {
+      if (budget <= 0) break; const h = Math.min(budget, r.hours); budget -= h;
+      items.push(`<li><b>${esc(r.name)}</b> <span class="num">${hrs(h)}</span>${h < r.hours - 1e-9 ? `（あと${hrs(r.hours - h)}）` : ""}</li>`);
+    }
+    $("#today").innerHTML = items.length ? `<ol>${items.join("")}</ol><p class="note">安全ラインまで、必要時間が短い順に1日分を割り当てています。</p>` : `<p class="note">今日やることはありません（または自分のスコアが未入力です）。</p>`;
+
+    // cards
+    const chip = { ok: '<span class="chip ok">安全圏</span>', plan: '<span class="chip plan">計画内</span>', no: '<span class="chip no">時間が足りない</span>', na: '<span class="chip na">データ待ち</span>', off: '<span class="chip na">狙わない</span>' };
+    $("#list").innerHTML = rows.map(r => `
+      <article class="card ${r.status}">
+        <div class="name">${esc(r.name)} <span class="tag ${r.tgt === "100" ? "t100" : ""}">${r.tgt === "off" ? "—" : r.tgt + "位"}</span></div>
+        ${chip[r.status]}
+        ${r.status === "off" ? "" : `
+        <div class="line"><span><span class="k">今</span><b class="num">${man(r.border)}</b></span>
+          <span><span class="k">予測</span><span class="num">${man(r.pred)}</span></span>
+          <span><span class="k">安全</span><b class="num safe">${man(r.safe)}</b></span>
+          ${r.lo != null ? `<span class="k num">過去の幅 ×${r.lo.toFixed(2)}〜×${r.hi.toFixed(2)}</span>` : r.final ? `<span class="k">確定</span>` : ""}</div>
+        <div class="my"><span class="k">自分</span><input data-name="${esc(r.name)}" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}" aria-label="${esc(r.name)}の自分のスコア">
+          ${r.need != null ? (r.need > 0 ? `<span>あと <b class="num">${man(r.need)}</b>（${hrs(r.hours)}）</span>` : `<span>安全ラインを超えています</span>`) : ""}</div>
+        ${spark(r)}`}
+      </article>`).join("");
+    renderTargets();
+  }
+
+  function spark(r) {
+    if (!r.pts || r.pts.length < 2) return "";
+    const W = 300, H = 30, xs = r.pts.map(p => p[0]), ys = r.pts.map(p => p[1]).concat(r.my ? [r.my] : []);
+    const x0 = 0, x1 = 100, y0 = 0, y1 = Math.max(...ys) * 1.05;
+    const sx = x => (x - x0) / (x1 - x0) * W, sy = y => H - 2 - (y - y0) / (y1 - y0) * (H - 4);
+    const d = r.pts.map((p, i) => (i ? "L" : "M") + sx(p[0]).toFixed(1) + "," + sy(p[1]).toFixed(1)).join("");
+    const my = r.my ? `<line x1="0" x2="${W}" y1="${sy(r.my).toFixed(1)}" y2="${sy(r.my).toFixed(1)}"/>` : "";
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${esc(r.name)}のボーダーの推移">${my}<path d="${d}"/></svg>`;
+  }
+
+  function renderTargets() {
+    const box = $("#targets"); if (box.dataset.ready) return; box.dataset.ready = "1";
+    box.innerHTML = IDOLS.map(n => `<label>${esc(n)}<select data-target="${esc(n)}">
+      <option value="100">100位</option><option value="500">500位</option><option value="off">狙わない</option></select></label>`).join("");
+    box.querySelectorAll("select").forEach(s => { s.value = S.target[s.dataset.target] || "500"; });
+  }
+
+  // ---------- events ----------
+  const put = (id, v) => { $(id).value = v ?? ""; };
+  put("#basis", S.basis); put("#margin", S.margin); put("#rate", full(S.rate)); put("#hpd", S.hpd);
+  $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
+  $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
+  $("#rate").addEventListener("change", e => { S.rate = num(e.target.value); e.target.value = full(S.rate); save(); render(); });
+  $("#hpd").addEventListener("change", e => { S.hpd = num(e.target.value); save(); render(); });
+  document.addEventListener("change", e => {
+    const t = e.target;
+    if (t.dataset.target) { S.target[t.dataset.target] = t.value; save(); render(); }
+    if (t.dataset.name) { S.my[t.dataset.name] = num(t.value); save(); render(); }
+  });
+  $("#reload").addEventListener("click", load);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && (!loadedAt || Date.now() - loadedAt > 60000)) load(); });
+  setInterval(() => { if (!document.hidden) load(); }, 3 * 60 * 1000);
+  load();
+})();
+</script>
+</body>
+</html>
