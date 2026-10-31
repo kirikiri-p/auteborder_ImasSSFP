@@ -546,7 +546,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
       ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
       ["終了まで", ev ? `${leftH.toFixed(0)}<small>時間</small>` : "—"],
-      ["自分の合計", ev && rows.some(r => r.my != null) ? `${man(rows.reduce((a, r) => a + (r.my || 0), 0))}` : "—"],
+      ["自分の合計／目標の合計", ev && rows.some(r => r.my != null) ? `${man(rows.reduce((a, r) => a + (r.my || 0), 0))}<small>／${man(rows.filter(r => r.status !== "off" && r.goal != null).reduce((a, r) => a + Math.max(r.goal, r.my || 0), 0))}</small>` : "—"],
       ["全員に必要／遊べる", ev && avail != null ? `${ctx.total.toFixed(0)}<small>h</small>／${avail.toFixed(0)}<small>h</small>` : "—"],
     ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v n">${v}</span></div>`).join("");
 
