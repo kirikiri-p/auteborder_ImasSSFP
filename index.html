@@ -176,6 +176,11 @@ table.cmp th,table.cmp td{padding:6px;border-bottom:1px solid var(--rule);text-a
 table.cmp th{font-size:.7rem;color:var(--ink-2);font-weight:normal}
 table.cmp th:first-child,table.cmp td:first-child{text-align:left}
 td.up{color:var(--no)} td.down{color:var(--ok)}
+table.ranks tbody tr{cursor:pointer}
+table.ranks tr.on td{background:#e6f0fa;font-weight:600}
+table.ov{margin-top:8px}
+table.ov tbody tr{cursor:pointer}
+table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
 @media (prefers-reduced-motion:no-preference){dialog[open]{animation:rise .22s ease-out}@keyframes rise{from{transform:translateY(24px);opacity:.4}}}
 </style>
 </head>
@@ -195,6 +200,11 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   <div id="notice"></div>
   <div id="units" style="display:flex;flex-direction:column;gap:26px"></div>
 
+  <details class="box" id="ovBox">
+    <summary>順位ごとの予測</summary>
+    <div class="seg seg-rank" id="ovSeg" role="group" aria-label="順位" style="margin-top:10px"></div>
+    <table class="cmp ov"><thead><tr><th></th><th>今</th><th>予測最終</th><th>前回最終</th></tr></thead><tbody id="ovBody"></tbody></table>
+  </details>
   <details class="box">
     <summary>今日の配分</summary>
     <div id="today"></div>
@@ -544,6 +554,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     if (ae !== $("#skipLeft")) $("#skipLeft").value = lt.skip;
     if (ae !== $("#autoLeft")) $("#autoLeft").value = lt.auto;
 
+    renderOverview();
     if (openName && $("#sheet").open) fillSheet(openName);
   }
 
@@ -592,13 +603,11 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(r.rateSong))}（曲から）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
           ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
             : ""}</div>
-        <div class="seg seg-rank" role="group" aria-label="グラフの順位">${vseg}</div>
-        <div class="facts">
-          <div><span class="k">今の${rl(vr)}${v.pct != null ? `（${v.pct.toFixed(1)}%）` : ""}</span><span class="v n">${man(v.border)}</span></div>
-          <div><span class="k">予測最終</span><span class="v n">${man(v.pred)}</span></div>
-          <div><span class="k">前回最終</span><span class="v n">${man((v.cmp[0] || {}).final)}</span></div>
-          <div><span class="k">最終までの倍率</span><span class="v n">${v.lo != null ? `${xr(v.lo)}〜${v.hi.toFixed(2)}` : v.final ? "確定" : "—"}</span></div>
-        </div>
+        <table class="cmp ranks"><thead><tr><th>順位</th><th>今</th><th>予測最終</th><th>前回最終</th></tr></thead><tbody>${VIEW_RANKS.map(k => {
+          const w = k === vr ? v : k === r.rk ? r : rankView(name, k, ctx.ev);
+          return `<tr data-vr="${k}" class="${k === vr ? "on" : ""}"><td>${rl(k)}</td><td class="n">${man(w.border)}</td><td class="n">${man(w.pred)}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
+        }).join("")}</tbody></table>
+        <p class="split">${rl(vr)}${v.pct != null ? `（${v.pct.toFixed(1)}%）` : ""}の予測の幅 <b class="n">${v.lo != null ? `${man(v.border * v.lo)}〜${man(v.border * v.hi)}` : v.final ? "確定" : "—"}</b>${v.lo != null ? `（${xr(v.lo)}〜${v.hi.toFixed(2)}）` : ""}</p>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
           <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
@@ -729,6 +738,17 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     hit.addEventListener("pointerleave", hide); hit.addEventListener("pointercancel", hide);
   }
 
+  let ovRank = "1";
+  function renderOverview() {
+    $("#ovSeg").innerHTML = VIEW_RANKS.map(k => `<button type="button" data-ov="${k}" class="${k === ovRank ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
+    const ev = ctx && ctx.ev;
+    $("#ovBody").innerHTML = UNITS.map(u => u.members.map(nm => {
+      const w = rankView(nm, ovRank, ev);
+      return `<tr data-open="${esc(nm)}" style="--u:${u.color}"><td>${esc(GIVEN[nm])}</td><td class="n">${man(w.border)}</td><td class="n">${man(w.pred)}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
+    }).join("")).join("");
+  }
+  $("#ovSeg").addEventListener("click", e => { const b = e.target.closest("[data-ov]"); if (b) { ovRank = b.dataset.ov; renderOverview(); } });
+  $("#ovBody").addEventListener("click", e => { const t = e.target.closest("[data-open]"); if (t) openSheet(t.dataset.open); });
   const viewRank = {};   // rank shown in each idol's chart; defaults to the target rank
   function openSheet(name) { openName = name; fillSheet(name); const d = $("#sheet"); if (!d.open) d.showModal(); }
   $("#sheet").addEventListener("click", e => {
