@@ -44,13 +44,13 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;
 button{font-family:inherit}
 .refresh,.mini,.use,.close{font-size:.8rem;color:var(--ink);background:var(--prism);border:1px solid rgba(255,255,255,.6);padding:6px 16px;cursor:pointer;white-space:nowrap;letter-spacing:.08em}
 .refresh:focus-visible,.card:focus-visible,button:focus-visible{outline:2px solid var(--ink-2);outline-offset:2px}
-.sumline{margin:18px 0 0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--paper)}
+.sumline{margin:18px 0 0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--paper)}
 .sumline div{display:flex;flex-direction:column;padding:9px 12px;border-left:1px solid var(--rule)}
 .sumline div:first-child{border-left:none}
 .sumline .k{font-size:.7rem;color:var(--ink-2);letter-spacing:.06em}
 .sumline .v{font-size:1.4rem;line-height:1.2}
 .sumline .v small{font-size:.75rem;margin-left:2px}
-@media (max-width:460px){.sumline{grid-template-columns:repeat(2,1fr)}.sumline div:nth-child(3){border-left:none}.sumline div:nth-child(n+3){border-top:1px solid var(--rule)}}
+@media (max-width:460px){.sumline{grid-template-columns:repeat(2,1fr)}.sumline div:nth-child(odd){border-left:none}.sumline div:nth-child(n+3){border-top:1px solid var(--rule)}.sumline div:last-child{grid-column:1/-1}}
 .updated{margin:8px 0 0;font-size:.74rem;color:var(--ink-2);text-align:right}
 
 main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bottom:48px}
@@ -364,6 +364,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     return out;
   }
   const dkey = ms => new Date(ms + JST).toISOString().slice(0, 10);   // JST date, e.g. 2026-10-31
+  const dkeyTime = ms => new Date(ms + JST).toISOString().slice(0, 16).replace("T", " ");
   function todayLeft(now) {   // skips and autos left today; the entered numbers count only on the day they were entered
     const l = S.left && S.left.date === dkey(now) ? S.left : {};
     return { skip: l.skip != null ? l.skip : SKIP_DAY, auto: l.auto != null ? l.auto : AUTO_DAY };
@@ -386,10 +387,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   }
 
   // ---------- data ----------
-  let points = null, fetched = null, ref = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
+  let points = null, fetched = null, mine = null, ref = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
   async function load() {
     try {
       const tasks = [fetch("data/points.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
+      fetch("data/my.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(m => { if (m) { mine = m; render(); } }).catch(() => {});
       if (!ref) tasks.push(fetch("data/reference.json?v=4", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
       fetched = p; points = withImports(p); if (r) ref = r; loadedAt = Date.now(); loadErr = null;
@@ -441,6 +443,10 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     const out = IDOLS.map(name => {
       const tgt = S.target[name] || "500";
       const r = { name, tgt, my: num(S.my[name]), status: tgt === "off" ? "off" : "na", cmp: [] };
+      const hl = (S.hist[name] || []).slice(-1)[0], localT = r.my != null && hl ? hl[0] : r.my != null ? 0 : -1;
+      const sh = mine && mine.history && mine.history[mine.history.length - 1];
+      if (sh && sh.scores && sh.scores[name] != null && jst(sh.time).getTime() > localT) { r.my = sh.scores[name]; r.myAt = sh.time; }
+      else if (r.my != null && hl) r.myAt = dkeyTime(hl[0]);
       const rk = tgt === "off" ? "100" : tgt;
       r.rk = rk;
       r.song = { play: songOf(name, "play"), auto: songOf(name, "auto"), skip: songOf(name, "skip") };
@@ -540,6 +546,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
       ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
       ["終了まで", ev ? `${leftH.toFixed(0)}<small>時間</small>` : "—"],
+      ["自分の合計", ev && rows.some(r => r.my != null) ? `${man(rows.reduce((a, r) => a + (r.my || 0), 0))}` : "—"],
       ["全員に必要／遊べる", ev && avail != null ? `${ctx.total.toFixed(0)}<small>h</small>／${avail.toFixed(0)}<small>h</small>` : "—"],
     ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v n">${v}</span></div>`).join("");
 
@@ -627,7 +634,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
           <div><span class="k">今の${rl(r.rk)}</span><span class="v n">${man(r.border)}</span></div>
           <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
         </div>
-        <div class="myrow"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
+        <div class="myrow"><label for="myIn">自分のスコア${r.myAt ? `<small class="meas">（${esc(r.myAt.slice(5).replace("-", "/"))}）</small>` : ""}</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
           <span>${r.need != null ? (r.need > 0 ? `${GOAL[r.goalKind]}まで あと <b class="n">${man(r.need)}</b>、${r.hours > 0 ? `<b class="n">${hrs(r.hours)}</b>` : "スキップで届く"}` : `${GOAL[r.goalKind]}を超えています`) : ""}</span></div>
         ${splitLine(r)}
         <div class="songpick">${Object.keys(MODES).map(m => `<label>${MODES[m]}<select data-song="${m}">${songOpts(name, m)}</select></label>`).join("")}</div>
