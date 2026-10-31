@@ -369,7 +369,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   async function load() {
     try {
       const tasks = [fetch("data/points.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
-      if (!ref) tasks.push(fetch("data/reference.json?v=3", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
+      if (!ref) tasks.push(fetch("data/reference.json?v=4", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
       fetched = p; points = withImports(p); if (r) ref = r; loadedAt = Date.now(); loadErr = null;
     } catch (e) { loadErr = e.message || String(e); }
