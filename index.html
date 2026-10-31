@@ -152,6 +152,8 @@ dialog::backdrop{background:rgba(0,40,65,.45)}
 .seg{display:inline-flex;border:1px solid var(--ink)}
 .seg button{font-size:.8rem;border:none;padding:4px 12px;background:transparent;color:var(--ink);cursor:pointer;letter-spacing:.04em}
 .seg button.on{background:var(--ink);color:#fff}
+.seg-rank{align-self:flex-start;flex-wrap:wrap}
+.seg-rank button{padding:4px 10px}
 .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px 14px}
 @media (max-width:460px){.facts{grid-template-columns:repeat(2,1fr)}}
 .facts div{display:flex;flex-direction:column;border-bottom:1px solid var(--rule);padding-bottom:4px}
@@ -263,7 +265,9 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   const UNIT_OF = Object.fromEntries(UNITS.flatMap(u => u.members.map(m => [m, u])));
   const GIVEN = { "櫻木真乃": "真乃", "風野灯織": "灯織", "八宮めぐる": "めぐる", "月岡恋鐘": "恋鐘", "田中摩美々": "摩美々", "白瀬咲耶": "咲耶", "三峰結華": "結華", "幽谷霧子": "霧子", "小宮果穂": "果穂", "園田智代子": "智代子", "西城樹里": "樹里", "杜野凛世": "凛世", "有栖川夏葉": "夏葉", "大崎甘奈": "甘奈", "大崎甜花": "甜花", "桑山千雪": "千雪", "芹沢あさひ": "あさひ", "黛冬優子": "冬優子", "和泉愛依": "愛依", "浅倉透": "透", "樋口円香": "円香", "福丸小糸": "小糸", "市川雛菜": "雛菜", "七草にちか": "にちか", "緋田美琴": "美琴", "斑鳩ルカ": "ルカ", "鈴木羽那": "羽那", "郁田はるき": "はるき" };
   const TOP100 = ["幽谷霧子", "和泉愛依", "小宮果穂", "大崎甘奈", "八宮めぐる", "市川雛菜", "緋田美琴", "郁田はるき"];
-  const COL = { "100": 5, "500": 6 };      // point = [time, pct, 1st, 12th, 50th, 100th, 500th]
+  const COL = { "1": 2, "12": 3, "50": 4, "100": 5, "500": 6, "10": 7, "SS": 8 };   // point = [time, pct, 1st, 12th, 50th, 100th, 500th, 10th, SS]
+  const VIEW_RANKS = ["1", "10", "50", "100", "500", "SS"];
+  const rl = rk => rk === "SS" ? "SSランク" : rk + "位";
   const KEY = "shanison-border-v1";
   const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
 
@@ -379,13 +383,34 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   }
 
   // ---------- model ----------
+  function rankView(name, rk, ev) {   // one rank's line: now, past events at the same point, and the predicted final
+    const ci = COL[rk];
+    const pts = ev ? (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]) : [];
+    const v = { name, rk, pts: pts.map(p => [p[1], p[ci], p[0]]), cmp: [] };
+    const lp = pts[pts.length - 1];
+    if (ref) for (const e of ref.events) {
+      const g = ((ref.past[name] || {})[e.key] || {})[rk];
+      const pv = lp ? gridAt(g, lp[1]) : null;
+      v.cmp.push({ label: e.label, now: pv, final: g ? g[100] : null, ratio: pv && lp ? lp[ci] / pv : null });
+    }
+    if (lp) {
+      v.border = lp[ci]; v.pct = lp[1]; v.time = lp[0];
+      if (lp[1] >= 99.99) { v.pred = v.border; v.final = true; }
+      else if (ref) {
+        const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
+        if (rs.length) { v.rs = rs; v.lo = Math.min(...rs); v.hi = Math.max(...rs); v.med = q(rs, .5); v.pred = v.border * v.med; }
+      }
+    }
+    return v;
+  }
+
   function compute() {
     const ev = liveEvent(), now = new Date();
     const leftH = ev ? Math.max(0, (jst(ev.end) - now) / 3600000) : null;
     const out = IDOLS.map(name => {
       const tgt = S.target[name] || "500";
       const r = { name, tgt, my: num(S.my[name]), status: tgt === "off" ? "off" : "na", cmp: [] };
-      const rk = tgt === "off" ? "100" : tgt, ci = COL[rk];
+      const rk = tgt === "off" ? "100" : tgt;
       r.rk = rk;
       r.song = { play: songOf(name, "play"), auto: songOf(name, "auto"), skip: songOf(name, "skip") };
       r.rateSong = songRate(r.song.play); r.rateOwn = num(S.rateBy[name]); r.rate = r.rateOwn || r.rateSong;
@@ -397,24 +422,12 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         const [a, b] = h.slice(-2), dh = (b[0] - a[0]) / 3600000, ds = b[1] - a[1];
         if (dh >= 1 / 6 && ds > 0) r.meas = { rate: ds / dh, ds, dh };
       }
-      const pts = ev ? (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]) : [];
-      r.pts = pts.map(p => [p[1], p[ci], p[0]]);
-      const lp = pts[pts.length - 1];
-      if (ref) for (const e of ref.events) {
-        const g = ((ref.past[name] || {})[e.key] || {})[rk];
-        const pv = lp ? gridAt(g, lp[1]) : null;
-        r.cmp.push({ label: e.label, now: pv, final: g ? g[100] : null, ratio: pv && lp ? lp[ci] / pv : null });
-      }
-      if (lp) {
-        r.border = lp[ci]; r.pct = lp[1]; r.time = lp[0];
-        if (lp[1] >= 99.99) { r.pred = r.safe = r.border; r.final = true; }
-        else if (ref) {
-          const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
-          if (rs.length) {
-            r.lo = Math.min(...rs); r.hi = Math.max(...rs); r.med = q(rs, .5);
-            const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(rs, .9) : r.med;
-            r.pred = r.border * r.med; r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
-          }
+      Object.assign(r, rankView(name, rk, ev));
+      if (r.border != null) {
+        if (r.final) r.safe = r.border;
+        else if (r.rs) {
+          const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(r.rs, .9) : r.med;
+          r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
         }
         if (r.safe != null) r.need = Math.max(0, r.safe - (r.my || 0));
       }
@@ -558,7 +571,10 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     const r = rows.find(x => x.name === name); if (!r) return;
     const u = UNIT_OF[name];
     const tg = ["100", "500", "off"].map(t => `<button type="button" data-tgt="${t}" class="${r.tgt === t ? "on" : ""}">${t === "off" ? "狙わない" : t + "位"}</button>`).join("");
-    const cmpRows = r.cmp.map(c => `<tr><td>${esc(c.label)}</td><td class="n">${r.pct != null ? man(c.now) : "—"}</td><td class="n ${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</td><td class="n">${man(c.final)}</td></tr>`).join("");
+    const vr = viewRank[name] || r.rk, same = vr === r.rk;
+    const v = same ? r : rankView(name, vr, ctx.ev);
+    const cmpRows = v.cmp.map(c => `<tr><td>${esc(c.label)}</td><td class="n">${v.pct != null ? man(c.now) : "—"}</td><td class="n ${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</td><td class="n">${man(c.final)}</td></tr>`).join("");
+    const vseg = VIEW_RANKS.map(k => `<button type="button" data-vr="${k}" class="${vr === k ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
     $("#sheetBody").innerHTML = `
       <div class="sheet-top" style="--u:${u.color}">${face(name)}
         <h3 id="sheetTitle">${esc(name)}<small>${esc(u.name)}</small></h3>
@@ -566,10 +582,8 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       <div class="sheet-body">
         <div class="bar"><span class="state ${r.status}" style="font-size:.9rem">${STATE[r.status]}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
         <div class="facts">
-          <div><span class="k">今の${r.rk}位${r.pct != null ? `（${r.pct.toFixed(1)}%）` : ""}</span><span class="v n">${man(r.border)}</span></div>
-          <div><span class="k">予測最終</span><span class="v n">${man(r.pred)}</span></div>
+          <div><span class="k">今の${rl(r.rk)}</span><span class="v n">${man(r.border)}</span></div>
           <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
-          <div><span class="k">最終までの倍率</span><span class="v n">${r.lo != null ? `${xr(r.lo)}〜${r.hi.toFixed(2)}` : r.final ? "確定" : "—"}</span></div>
         </div>
         <div class="myrow"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
           <span>${r.need != null ? (r.need > 0 ? `あと <b class="n">${man(r.need)}</b>、<b class="n">${hrs(r.hours)}</b>` : "安全ラインを超えています") : ""}</span></div>
@@ -578,13 +592,20 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
         <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(r.rateSong))}（曲から）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
           ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
             : ""}</div>
+        <div class="seg seg-rank" role="group" aria-label="グラフの順位">${vseg}</div>
+        <div class="facts">
+          <div><span class="k">今の${rl(vr)}${v.pct != null ? `（${v.pct.toFixed(1)}%）` : ""}</span><span class="v n">${man(v.border)}</span></div>
+          <div><span class="k">予測最終</span><span class="v n">${man(v.pred)}</span></div>
+          <div><span class="k">前回最終</span><span class="v n">${man((v.cmp[0] || {}).final)}</span></div>
+          <div><span class="k">最終までの倍率</span><span class="v n">${v.lo != null ? `${xr(v.lo)}〜${v.hi.toFixed(2)}` : v.final ? "確定" : "—"}</span></div>
+        </div>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
           <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
           <span style="color:var(--s1)"><i style="border-top:9px solid;opacity:.2"></i>予測の幅</span>
-          <span><i style="border-top-style:dashed;color:var(--no)"></i>安全ライン</span>${r.my ? `<span><i style="color:var(--ink);border-top-style:dotted"></i>自分</span>` : ""}
+          ${same ? `<span><i style="border-top-style:dashed;color:var(--no)"></i>安全ライン</span>${r.my ? `<span><i style="color:var(--ink);border-top-style:dotted"></i>自分</span>` : ""}` : ""}
         </div>
-        <div class="chart" id="chart">${chartSvg(r)}<div class="tip" id="tip"></div></div>
+        <div class="chart" id="chart">${chartSvg(v)}<div class="tip" id="tip"></div></div>
         <table class="cmp"><thead><tr><th>過去の開催</th><th>同じ経過率</th><th>今回は</th><th>最終</th></tr></thead><tbody>${cmpRows}</tbody></table>
 
       </div>`;
@@ -684,7 +705,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     if (cur.length > 1) s += `<path d="${path(cur)}" fill="none" stroke="var(--s1)" stroke-width="2.4"/>`;
     if (cur.length) { const p = cur[cur.length - 1]; s += `<circle cx="${sx(p[0])}" cy="${sy(p[1])}" r="4" fill="var(--s1)" stroke="var(--paper)" stroke-width="2"/>`; }
     s += `<line id="xh" y1="${T}" y2="${H - B}" stroke="var(--ink-2)" stroke-width="1" visibility="hidden"/><rect id="hit" x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(r.name)}の${r.rk}位ボーダーの推移">${s}</svg>`;
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(r.name)}の${rl(r.rk)}ボーダーの推移">${s}</svg>`;
   }
   function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(raw))); const n = raw / p; return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p; }
   function lerp(pts, x) { if (!pts.length || x < pts[0][0] || x > pts[pts.length - 1][0]) return null; for (let i = 1; i < pts.length; i++) if (pts[i][0] >= x) { const a = pts[i - 1], b = pts[i]; return b[0] > a[0] ? a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]) : b[1]; } return pts[pts.length - 1][1]; }
@@ -708,11 +729,13 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     hit.addEventListener("pointerleave", hide); hit.addEventListener("pointercancel", hide);
   }
 
+  const viewRank = {};   // rank shown in each idol's chart; defaults to the target rank
   function openSheet(name) { openName = name; fillSheet(name); const d = $("#sheet"); if (!d.open) d.showModal(); }
   $("#sheet").addEventListener("click", e => {
     if (e.target === $("#sheet") || e.target.closest("[data-close]")) { $("#sheet").close(); return; }
     const t = e.target.closest("[data-tgt]"); if (t) { S.target[openName] = t.dataset.tgt; save(); render(); }
     const u = e.target.closest("[data-use]"); if (u) { S.rateBy[openName] = +u.dataset.use; save(); render(); }
+    const vb = e.target.closest("[data-vr]"); if (vb) { viewRank[openName] = vb.dataset.vr; fillSheet(openName); }
   });
   $("#sheet").addEventListener("change", e => {
     if (e.target.id === "myIn") {
@@ -728,7 +751,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
 
   // ---------- imports (pasted on this device) ----------
   const IKEY = "shanison-border-import";
-  const RANKS5 = ["1", "12", "50", "100", "500"];
+  const RANKS5 = ["1", "12", "50", "100", "500", "10", "SS"];
   const loadImp = () => { try { return JSON.parse(localStorage.getItem(IKEY) || "{}") || {}; } catch (e) { return {}; } };
   const evKey = (a, b) => [a, b].map(x => x.replace(/[-:]/g, "").replace(" ", "-")).join("_");
   function mergeInto(base, add) {   // base and add are {eventKey: {title, start, end, idols: {name: [point...]}}}; returns the number of new points
@@ -759,7 +782,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       if ((m = l.match(/開催期間[:：]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s*[~〜]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})/))) { s.start = m[1]; s.end = m[2]; continue; }
       if ((m = l.match(/現在時刻[:：]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s*[\(（]経過率\s*([\d.]+)%[\)）]/))) { s.now = m[1]; s.pct = +m[2]; continue; }
       if ((m = l.match(/^(?:🥇|🥈|🥉)?\s*(\d+)位\s*-/))) { pend = m[1]; continue; }
-      if (l.includes("ランク - ")) { pend = null; continue; }
+      if (l.includes("ランク - ")) { pend = l.startsWith("SSランク") ? "SS" : null; continue; }
       if ((m = l.match(/^([^:：\d]{1,12})[:：]\s*([\d,]+)/)) && pend != null) { s.vals[pend] = +m[2].replace(/,/g, ""); pend = null; }
     }
     flush();

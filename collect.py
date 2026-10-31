@@ -27,7 +27,7 @@ API = "https://discord.com/api/v10"
 JST = timezone(timedelta(hours=9))
 DISCORD_EPOCH = 1420070400000
 DATA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
-RANKS = ["1", "12", "50", "100", "500"]
+RANKS = ["1", "12", "50", "100", "500", "10", "SS"]   # point = [time, pct] + these; 10 and SS were added later, at the end
 
 
 # ---------------------------------------------------------------- Discord API
@@ -121,7 +121,7 @@ def parse(text, fallback_idol):
             pending = m.group(1)
             continue
         if "ランク - " in line:
-            pending = None
+            pending = "SS" if line.startswith("SSランク") else None
             continue
         m = RE_VALUE.match(line)
         if m and pending is not None:
@@ -151,7 +151,7 @@ def to_bot_text(ev, idol, p):
              f"現在時刻: {p[0]} (経過率 {p[1]:.2f}%)"]
     for r, v in zip(RANKS, p[2:]):
         if v is not None:
-            lines += [f"{r}位 - (記録)", f"観客動員数: {v:,}"]
+            lines += [f"{r}ランク - (記録)" if r == "SS" else f"{r}位 - (記録)", f"観客動員数: {v:,}"]
     return "\n".join(lines)
 
 
