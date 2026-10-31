@@ -177,6 +177,7 @@ table.cmp th{font-size:.7rem;color:var(--ink-2);font-weight:normal}
 table.cmp th:first-child,table.cmp td:first-child{text-align:left}
 td.up{color:var(--no)} td.down{color:var(--ok)}
 table.ranks tbody tr{cursor:pointer}
+td.crossed{color:var(--ink-3)}
 table.ranks tr.on td{background:#e6f0fa}
 table.ov{margin-top:8px}
 table.ov tbody tr{cursor:pointer}
@@ -204,6 +205,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     <summary>順位ごとの予測</summary>
     <div class="seg seg-rank" id="ovSeg" role="group" aria-label="順位" style="margin-top:10px"></div>
     <table class="cmp ov"><thead><tr><th></th><th>今</th><th>予測最終</th><th>前回最終</th></tr></thead><tbody id="ovBody"></tbody></table>
+    <p class="note" id="ovNote"></p>
   </details>
   <details class="box">
     <summary>今日の配分</summary>
@@ -393,6 +395,16 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   }
 
   // ---------- model ----------
+  const ORDER = ["1", "10", "50", "100", "500"];
+  function crossed(views) {   // ranks whose predicted final passes a higher rank's (cannot happen at the end)
+    const f = new Set();
+    for (let i = 0; i < ORDER.length; i++) for (let j = i + 1; j < ORDER.length; j++) {
+      const a = (views[ORDER[i]] || {}).pred, b = (views[ORDER[j]] || {}).pred;
+      if (a != null && b != null && b > a) { f.add(ORDER[i]); f.add(ORDER[j]); }
+    }
+    return f;
+  }
+  const allViews = (name, ev) => Object.fromEntries(ORDER.map(k => [k, rankView(name, k, ev)]));
   function rankView(name, rk, ev) {   // one rank's line: now, past events at the same point, and the predicted final
     const ci = COL[rk];
     const pts = ev ? (ev.idols[name] || []).filter(p => p[ci] != null).sort((a, b) => a[1] - b[1]) : [];
@@ -406,7 +418,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     if (lp) {
       v.border = lp[ci]; v.pct = lp[1]; v.time = lp[0];
       if (lp[1] >= 99.99) { v.pred = v.border; v.final = true; }
-      else if (ref) {
+      else if (ref && lp[ci] > 0) {
         const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
         if (rs.length) { v.rs = rs; v.lo = Math.min(...rs); v.hi = Math.max(...rs); v.med = q(rs, .5); v.pred = v.border * v.med; }
       }
@@ -583,6 +595,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     const u = UNIT_OF[name];
     const tg = ["100", "500", "off"].map(t => `<button type="button" data-tgt="${t}" class="${r.tgt === t ? "on" : ""}">${t === "off" ? "狙わない" : t + "位"}</button>`).join("");
     const vr = viewRank[name] || r.rk, same = vr === r.rk;
+    const views = allViews(name, ctx.ev), bad = crossed(views);
     const v = same ? r : rankView(name, vr, ctx.ev);
     const cmpRows = v.cmp.map(c => `<tr><td>${esc(c.label)}</td><td class="n">${v.pct != null ? man(c.now) : "—"}</td><td class="n ${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</td><td class="n">${man(c.final)}</td></tr>`).join("");
     const vseg = VIEW_RANKS.map(k => `<button type="button" data-vr="${k}" class="${vr === k ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
@@ -604,9 +617,10 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
           ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
             : ""}</div>
         <table class="cmp ranks"><thead><tr><th>順位</th><th>今</th><th>予測最終</th><th>前回最終</th></tr></thead><tbody>${VIEW_RANKS.map(k => {
-          const w = k === vr ? v : k === r.rk ? r : rankView(name, k, ctx.ev);
-          return `<tr data-vr="${k}" class="${k === vr ? "on" : ""}"><td>${rl(k)}</td><td class="n">${man(w.border)}</td><td class="n">${man(w.pred)}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
+          const w = k === vr ? v : k === r.rk ? r : (views[k] || rankView(name, k, ctx.ev));
+          return `<tr data-vr="${k}" class="${k === vr ? "on" : ""}"><td>${rl(k)}</td><td class="n">${man(w.border)}</td><td class="n${bad.has(k) ? " crossed" : ""}">${man(w.pred)}${bad.has(k) ? "※" : ""}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
         }).join("")}</tbody></table>
+        ${bad.size ? `<p class="split">※ 上の順位の予測を追い越しています。今はまだ当てになりません。</p>` : ""}
         <p class="split">${rl(vr)}${v.pct != null ? `（${v.pct.toFixed(1)}%）` : ""}の予測の幅 <b class="n">${v.lo != null ? `${man(v.border * v.lo)}〜${man(v.border * v.hi)}` : v.final ? "確定" : "—"}</b>${v.lo != null ? `（${xr(v.lo)}〜${v.hi.toFixed(2)}）` : ""}</p>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
@@ -685,7 +699,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     });
     const cur = r.pts.map(p => [p[0], p[1]]);
     const band = [];
-    if (ref && r.border != null && !r.final) {
+    if (ref && r.border > 0 && !r.final) {
       const curves = ref.refs.filter(x => x.rank === r.rk);
       const xs = [r.pct]; for (let x = Math.floor(r.pct) + 1; x <= 100; x++) xs.push(x);
       for (const x of xs) {
@@ -741,11 +755,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   let ovRank = "1";
   function renderOverview() {
     $("#ovSeg").innerHTML = VIEW_RANKS.map(k => `<button type="button" data-ov="${k}" class="${k === ovRank ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
-    const ev = ctx && ctx.ev;
+    const ev = ctx && ctx.ev; let anyX = false;
     $("#ovBody").innerHTML = UNITS.map(u => u.members.map(nm => {
-      const w = rankView(nm, ovRank, ev);
-      return `<tr data-open="${esc(nm)}" style="--u:${u.color}"><td>${esc(GIVEN[nm])}</td><td class="n">${man(w.border)}</td><td class="n">${man(w.pred)}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
+      const w = rankView(nm, ovRank, ev), x = ORDER.includes(ovRank) && crossed(allViews(nm, ev)).has(ovRank);
+      if (x) anyX = true;
+      return `<tr data-open="${esc(nm)}" style="--u:${u.color}"><td>${esc(GIVEN[nm])}</td><td class="n">${man(w.border)}</td><td class="n${x ? " crossed" : ""}">${man(w.pred)}${x ? "※" : ""}</td><td class="n">${man((w.cmp[0] || {}).final)}</td></tr>`;
     }).join("")).join("");
+    $("#ovNote").textContent = anyX ? "※ ほかの順位の予測と逆になっています。今はまだ当てになりません。" : "";
   }
   $("#ovSeg").addEventListener("click", e => { const b = e.target.closest("[data-ov]"); if (b) { ovRank = b.dataset.ov; renderOverview(); } });
   $("#ovBody").addEventListener("click", e => { const t = e.target.closest("[data-open]"); if (t) openSheet(t.dataset.open); });
