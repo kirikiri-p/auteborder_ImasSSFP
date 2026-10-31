@@ -149,7 +149,7 @@ dialog::backdrop{background:rgba(0,40,65,.45)}
 .close{background:#fff;border:none}
 .sheet-body{padding:14px 16px max(20px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:14px}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.seg{display:inline-flex;border:1px solid var(--ink)}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--ink)}
 .seg button{font-size:.8rem;border:none;padding:4px 12px;background:transparent;color:var(--ink);cursor:pointer;letter-spacing:.04em}
 .seg button.on{background:var(--ink);color:#fff}
 .seg-rank{align-self:flex-start;flex-wrap:wrap}
@@ -531,7 +531,8 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v n">${v}</span></div>`).join("");
 
     $("#units").innerHTML = UNITS.map(u => {
-      const rs = u.members.map(m => rows.find(r => r.name === m)).sort((a, b) => (a.tgt === "100" ? 0 : 1) - (b.tgt === "100" ? 0 : 1));
+      const ord = r => { const i = TARGETS.indexOf(r.tgt); return i < 0 ? 99 : i; };
+      const rs = u.members.map(m => rows.find(r => r.name === m)).sort((a, b) => ord(a) - ord(b));
       const bad = rs.filter(r => r.status === "no").length;
       return `<section class="unit" style="--u:${u.color}${u.text ? `;--ut:${u.text}` : ""}">
         <div class="ribbon"><b>${esc(u.name)}</b>${u.name !== u.kana ? `<span>${esc(u.kana)}</span>` : ""}${bad ? `<span class="alert">足りない ${bad}人</span>` : ""}</div>
@@ -570,15 +571,19 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     if (openName && $("#sheet").open) fillSheet(openName);
   }
 
+  const TARGETS = ["1", "10", "50", "100", "500", "SS"];
+  const short = k => k === "SS" ? "SS" : k + "位";
+  const isTop = r => ["1", "10", "50", "100"].includes(r.tgt);   // wide card for ranks 100 and above
   function card(r) {
-    const top = r.tgt === "100";
-    const rank = `<span class="rank">${r.tgt === "off" ? "—" : r.tgt + "位"}</span>`;
+    const top = isTop(r);
+    const rank = `<span class="rank">${r.tgt === "off" ? "—" : short(r.tgt)}</span>`;
     let fig, aux;
     if (r.border == null) { fig = `<span class="k">前回最終</span>${man((r.cmp[0] || {}).final)}`; aux = ""; }
     else if (r.status === "off") { fig = `<span class="k">今</span>${man(r.border)}`; aux = ""; }
-    else if (r.status === "ok") { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `自分 ${man(r.my)}`; }
-    else if (r.my != null) { fig = `<span class="k">あと</span>${man(r.need)}`; aux = `${hrs(r.hours)}${r.rateOwn ? "（この子の時速）" : ""}`; }
-    else { fig = `<span class="k">安全ライン</span>${man(r.safe)}`; aux = `今 ${man(r.border)}`; }
+    else {
+      fig = r.pred != null ? `<span class="k">予測</span>${man(r.pred)}` : `<span class="k">今</span>${man(r.border)}`;
+      aux = r.my != null ? `自分 ${man(r.my)}${r.status === "ok" ? "" : `、あと${hrs(r.hours)}`}` : `今 ${man(r.border)}`;
+    }
     const c = r.cmp[0];
     if (r.border != null && c && c.ratio) aux += `${aux ? "、" : ""}前回の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>`;
     return `<button class="card ${r.status}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
@@ -593,7 +598,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   function fillSheet(name) {
     const r = rows.find(x => x.name === name); if (!r) return;
     const u = UNIT_OF[name];
-    const tg = ["100", "500", "off"].map(t => `<button type="button" data-tgt="${t}" class="${r.tgt === t ? "on" : ""}">${t === "off" ? "狙わない" : t + "位"}</button>`).join("");
+    const tg = [...TARGETS, "off"].map(t => `<button type="button" data-tgt="${t}" class="${r.tgt === t ? "on" : ""}">${t === "off" ? "狙わない" : short(t)}</button>`).join("");
     const vr = viewRank[name] || r.rk, same = vr === r.rk;
     const views = allViews(name, ctx.ev), bad = crossed(views);
     const v = same ? r : rankView(name, vr, ctx.ev);
