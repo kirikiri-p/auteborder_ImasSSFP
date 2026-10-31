@@ -222,6 +222,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         </select>
       </label>
       <label>上乗せ（%）<input id="margin" inputmode="decimal"></label>
+      <label>判定の基準
+        <select id="judge">
+          <option value="stage">予測を超えたら安全ライン</option>
+          <option value="pred">予測</option>
+          <option value="safe">安全ライン</option>
+        </select>
+      </label>
       <label>曲と曲のあいだ（秒）<input id="gap" inputmode="numeric"></label>
       <label>休み7時間の開始
         <select id="restStart"></select>
@@ -282,11 +289,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   const rl = rk => rk === "SS" ? "SSランク" : rk + "位";
   const KEY = "shanison-border-v1";
   const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
+  const GOAL = { pred: "予測", safe: "安全ライン" };
+  const stateText = r => r.status === "ok" && r.goalKind === "pred" ? "予測超え" : STATE[r.status];
 
   // ---------- settings ----------
   const MODES = { play: "手動の曲", auto: "オートの曲", skip: "スキップの曲" };
   const SKIP_DAY = 20, AUTO_DAY = 50;
-  const defaults = () => ({ basis: "max", margin: 0, gap: null, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
+  const defaults = () => ({ basis: "max", judge: "stage", margin: 0, gap: null, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
     songs: [{ id: "s1", name: "星の数だけ（アニメVer.）MASTER", len: 125, fans: 25000 }],
     def: { play: "s1", auto: "s1", skip: "s1" }, songBy: {}, left: null,
     target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {}, rateBy: {}, hist: {} });
@@ -451,7 +460,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
           const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(r.rs, .9) : r.med;
           r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
         }
-        if (r.safe != null) r.need = Math.max(0, r.safe - (r.my || 0));
+        // goal: the predicted final, or the safe line; "stage" uses the prediction until your score passes it
+        const j = S.judge || "stage";
+        r.goalKind = r.pred == null ? "safe" : j === "pred" ? "pred" : j === "safe" ? "safe" : (r.my != null && r.my >= r.pred ? "safe" : "pred");
+        r.goal = r.goalKind === "pred" ? r.pred : r.safe;
+        if (r.goal != null) r.need = Math.max(0, r.goal - (r.my || 0));
       }
       return r;
     });
@@ -489,7 +502,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       r.hours = r.need === 0 ? 0 : r.manualH == null ? null : r.manualH + r.nAuto * r.autoH;
     });
     let used = 0;
-    out.filter(r => r.status !== "off" && r.safe != null).sort((a, b) => (a.hours ?? 1e9) - (b.hours ?? 1e9)).forEach(r => {
+    out.filter(r => r.status !== "off" && r.goal != null).sort((a, b) => (a.hours ?? 1e9) - (b.hours ?? 1e9)).forEach(r => {
       if (r.need === 0) r.status = "ok";
       else if (r.hours == null) r.status = "na";
       else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
@@ -582,13 +595,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     else if (r.status === "off") { fig = `<span class="k">今</span>${man(r.border)}`; aux = ""; }
     else {
       fig = r.pred != null ? `<span class="k">予測</span>${man(r.pred)}` : `<span class="k">今</span>${man(r.border)}`;
-      aux = r.my != null ? `自分 ${man(r.my)}${r.status === "ok" ? "" : `、あと${hrs(r.hours)}`}` : `今 ${man(r.border)}`;
+      aux = r.my != null ? `自分 ${man(r.my)}${r.status === "ok" ? "" : `、${GOAL[r.goalKind]}まで${r.hours > 0 ? hrs(r.hours) : "スキップで届く"}`}` : `今 ${man(r.border)}`;
     }
     const c = r.cmp[0];
     if (r.border != null && c && c.ratio) aux += `${aux ? "、" : ""}前回の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>`;
     return `<button class="card ${r.status}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
       <span class="who">${top ? "" : face(r.name)}<b>${esc(r.name)}</b>${top ? rank : ""}</span>
-      <span class="line2"><span class="state ${r.status}">${STATE[r.status]}</span>${top ? "" : rank}</span>
+      <span class="line2"><span class="state ${r.status}">${stateText(r)}</span>${top ? "" : rank}</span>
       <span class="fig n">${fig}</span>
       <span class="aux">${aux}</span>
       ${top ? face(r.name) : ""}</button>`;
@@ -609,13 +622,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         <h3 id="sheetTitle">${esc(name)}<small>${esc(u.name)}</small></h3>
         <button type="button" class="close" data-close>閉じる</button></div>
       <div class="sheet-body">
-        <div class="bar"><span class="state ${r.status}" style="font-size:.9rem">${STATE[r.status]}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
+        <div class="bar"><span class="state ${r.status}" style="font-size:.9rem">${stateText(r)}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
         <div class="facts">
           <div><span class="k">今の${rl(r.rk)}</span><span class="v n">${man(r.border)}</span></div>
           <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
         </div>
         <div class="myrow"><label for="myIn">自分のスコア</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
-          <span>${r.need != null ? (r.need > 0 ? `あと <b class="n">${man(r.need)}</b>、<b class="n">${hrs(r.hours)}</b>` : "安全ラインを超えています") : ""}</span></div>
+          <span>${r.need != null ? (r.need > 0 ? `${GOAL[r.goalKind]}まで あと <b class="n">${man(r.need)}</b>、${r.hours > 0 ? `<b class="n">${hrs(r.hours)}</b>` : "スキップで届く"}` : `${GOAL[r.goalKind]}を超えています`) : ""}</span></div>
         ${splitLine(r)}
         <div class="songpick">${Object.keys(MODES).map(m => `<label>${MODES[m]}<select data-song="${m}">${songOpts(name, m)}</select></label>`).join("")}</div>
         <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(r.rateSong))}（曲から）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
@@ -862,8 +875,9 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
   const put = (id, v) => { $(id).value = v ?? ""; };
   $("#restStart").innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${h}:00〜${(h + 7) % 24}:00</option>`).join("");
-  put("#basis", S.basis); put("#margin", S.margin); put("#gap", gapSec()); put("#restStart", S.restStart); put("#busy", S.busy);
+  put("#basis", S.basis); put("#judge", S.judge || "stage"); put("#margin", S.margin); put("#gap", gapSec()); put("#restStart", S.restStart); put("#busy", S.busy);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
+  $("#judge").addEventListener("change", e => { S.judge = e.target.value; save(); render(); });
   $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
   $("#gap").addEventListener("change", e => { const v = num(e.target.value); if (v != null && v >= 0) S.gap = v; put("#gap", gapSec()); save(); buildSongs(); render(); });
   const setLeft = (k, v) => { const now = Date.now(), lt = todayLeft(now), max = k === "skip" ? SKIP_DAY : AUTO_DAY;
