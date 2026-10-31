@@ -104,6 +104,10 @@ input,select,textarea{font:inherit;font-size:.9rem;color:var(--ink);background:v
 .busy textarea{resize:vertical}
 ol{margin:6px 0 0;padding-left:1.4em;font-size:.9rem}
 .note{font-size:.74rem;color:var(--ink-2);margin:6px 0 0;line-height:1.7}
+.steps{margin:8px 0 0;padding-left:1.3em;font-size:.82rem}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+a.mini{text-decoration:none;display:inline-block}
+#importText{width:100%;margin-top:10px;font-size:.8rem;resize:vertical}
 .foot{font-size:.72rem;color:var(--ink-2);text-align:center;letter-spacing:.06em}
 .sub{font:700 .68rem/1.4 var(--serif);letter-spacing:.24em;color:var(--ink-2);margin:18px 0 0}
 .songhead,.songrow{display:grid;grid-template-columns:minmax(0,1fr) 4.6em 6.6em auto;gap:6px;align-items:center}
@@ -225,6 +229,18 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     <table class="pick"><colgroup><col class="nm"><col><col><col></colgroup>
       <thead><tr><th></th><th>手動</th><th>オート</th><th>スキップ</th></tr></thead><tbody id="pickBody"></tbody></table>
   </details>
+  <details class="box" id="importBox">
+    <summary>取り込み</summary>
+    <ol class="steps">
+      <li>PCのブラウザでDiscordの「シャニソンボーダー」を開く</li>
+      <li>下の「ボーダーを読む」をブックマークバーに入れて押す（動かなければ「コードをコピー」して、開発者ツールのコンソールに貼る）</li>
+      <li>出てきた「コピー」を押して、ここに貼る</li>
+    </ol>
+    <p class="tools"><a class="mini" id="bmLink" href="#">ボーダーを読む</a><button type="button" class="mini" id="copyCode">コードをコピー</button></p>
+    <textarea id="importText" rows="3" placeholder="ここに貼る（Botの投稿をそのままコピーしたものでも読めます）"></textarea>
+    <p class="tools"><button type="button" class="mini" id="doImport">取り込む</button><button type="button" class="mini" id="clearImport">取り込んだ記録を消す</button></p>
+    <p class="note" id="importMsg"></p>
+  </details>
   <p class="foot">非公式のファンツールです</p>
 </main>
 
@@ -345,13 +361,13 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   }
 
   // ---------- data ----------
-  let points = null, ref = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
+  let points = null, fetched = null, ref = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
   async function load() {
     try {
       const tasks = [fetch("data/points.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
       if (!ref) tasks.push(fetch("data/reference.json?v=2", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
-      points = p; if (r) ref = r; loadedAt = Date.now(); loadErr = null;
+      fetched = p; points = withImports(p); if (r) ref = r; loadedAt = Date.now(); loadErr = null;
     } catch (e) { loadErr = e.message || String(e); }
     render();
   }
@@ -444,7 +460,8 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
       else r.status = "no";
     });
-    return { ev, leftH, avail, used, todayH, pool, rows: out };
+    const total = out.filter(r => r.status !== "off" && r.hours != null).reduce((a, r) => a + r.hours, 0);
+    return { ev, leftH, avail, used, total, todayH, pool, rows: out };
   }
 
   // ---------- render ----------
@@ -475,7 +492,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
       ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
       ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
       ["終了まで", ev ? `${leftH.toFixed(0)}<small>時間</small>` : "—"],
-      ["必要／遊べる", ev && avail != null ? `${used.toFixed(0)}<small>h</small>／${avail.toFixed(0)}<small>h</small>` : "—"],
+      ["全員に必要／遊べる", ev && avail != null ? `${ctx.total.toFixed(0)}<small>h</small>／${avail.toFixed(0)}<small>h</small>` : "—"],
     ].map(([k, v]) => `<div><span class="k">${k}</span><span class="v n">${v}</span></div>`).join("");
 
     $("#units").innerHTML = UNITS.map(u => {
@@ -707,6 +724,75 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     if (e.target.dataset.song) setSong(openName, e.target.dataset.song, e.target.value);
   });
   $("#sheet").addEventListener("close", () => { openName = null; render(); });
+
+
+  // ---------- imports (pasted on this device) ----------
+  const IKEY = "shanison-border-import";
+  const RANKS5 = ["1", "12", "50", "100", "500"];
+  const loadImp = () => { try { return JSON.parse(localStorage.getItem(IKEY) || "{}") || {}; } catch (e) { return {}; } };
+  const evKey = (a, b) => [a, b].map(x => x.replace(/[-:]/g, "").replace(" ", "-")).join("_");
+  function mergeInto(base, add) {   // base and add are {eventKey: {title, start, end, idols: {name: [point...]}}}; returns the number of new points
+    let n = 0;
+    for (const [k, e] of Object.entries(add || {})) {
+      if (!e || !e.idols || !e.start || !e.end) continue;
+      const b = base[k] = base[k] || { title: e.title, start: e.start, end: e.end, idols: {} };
+      for (const [name, pts] of Object.entries(e.idols)) {
+        const rows = b.idols[name] = b.idols[name] || [];
+        for (const p of pts || []) if (Array.isArray(p) && p[0] && !rows.some(q => q[0] === p[0])) { rows.push(p); n++; }
+        rows.sort((x, y) => x[1] - y[1] || (x[0] < y[0] ? -1 : 1));
+      }
+    }
+    return n;
+  }
+  const withImports = p => { const c = JSON.parse(JSON.stringify(p || {})); mergeInto(c, loadImp()); return c; };
+  function parsePosts(text) {   // one or more border posts as plain text
+    const out = {}; let s = null, pend = null;
+    const flush = () => {
+      if (!(s && s.start && s.now && Object.keys(s.vals).length && s.idol)) return;
+      const e = out[evKey(s.start, s.end)] = out[evKey(s.start, s.end)] || { title: s.title, start: s.start, end: s.end, idols: {} };
+      (e.idols[s.idol] = e.idols[s.idol] || []).push([s.now, s.pct, ...RANKS5.map(r => s.vals[r] ?? null)]);
+    };
+    for (const raw of String(text).split(/\r?\n/)) {
+      const l = raw.trim(); if (!l) continue; let m;
+      if ((m = l.match(/^(.+ライブイベント)\s*[\(（](.+)[\)）]\s*$/))) { flush(); s = { title: m[1].trim(), idol: m[2].trim(), vals: {} }; pend = null; continue; }
+      if (!s) continue;
+      if ((m = l.match(/開催期間[:：]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s*[~〜]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})/))) { s.start = m[1]; s.end = m[2]; continue; }
+      if ((m = l.match(/現在時刻[:：]\s*(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\s*[\(（]経過率\s*([\d.]+)%[\)）]/))) { s.now = m[1]; s.pct = +m[2]; continue; }
+      if ((m = l.match(/^(?:🥇|🥈|🥉)?\s*(\d+)位\s*-/))) { pend = m[1]; continue; }
+      if (l.includes("ランク - ")) { pend = null; continue; }
+      if ((m = l.match(/^([^:：\d]{1,12})[:：]\s*([\d,]+)/)) && pend != null) { s.vals[pend] = +m[2].replace(/,/g, ""); pend = null; }
+    }
+    flush();
+    return out;
+  }
+  const impCount = () => Object.values(loadImp()).reduce((a, e) => a + Object.values(e.idols || {}).reduce((b, r) => b + r.length, 0), 0);
+  const impMsg = t => { $("#importMsg").textContent = t ?? (impCount() ? `この端末に取り込んだ記録：${impCount()}件` : ""); };
+  $("#doImport").addEventListener("click", () => {
+    const t = $("#importText").value.trim(); if (!t) return;
+    let add = null;
+    try { add = JSON.parse(t); } catch (e) { add = parsePosts(t); }
+    const n = mergeInto(JSON.parse(JSON.stringify(points || {})), add), all = loadImp(); mergeInto(all, add);
+    try { localStorage.setItem(IKEY, JSON.stringify(all)); } catch (e) {}
+    $("#importText").value = "";
+    if (fetched) points = withImports(fetched);
+    impMsg(n ? `${n}件取り込みました。` : "新しい記録はありませんでした。");
+    render();
+  });
+  $("#clearImport").addEventListener("click", () => {
+    try { localStorage.removeItem(IKEY); } catch (e) {}
+    if (fetched) points = withImports(fetched);
+    impMsg("取り込んだ記録を消しました。"); render();
+  });
+  let grabCode = "";
+  fetch("grab.js", { cache: "no-store" }).then(r => r.ok ? r.text() : "").then(t => {
+    grabCode = t;
+    if (t) $("#bmLink").href = "javascript:" + encodeURIComponent(t.replace(/^\s*\/\/.*$/gm, ""));
+  });
+  $("#bmLink").addEventListener("click", e => { e.preventDefault(); impMsg("このリンクはブックマークバーにドラッグして、Discordのページで押してください。"); });
+  $("#copyCode").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(grabCode); impMsg("コードをコピーしました。"); } catch (e) { impMsg("コピーできませんでした。"); }
+  });
+  impMsg();
 
   // ---------- events ----------
   $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
