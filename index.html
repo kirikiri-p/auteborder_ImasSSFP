@@ -369,7 +369,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
   async function load() {
     try {
       const tasks = [fetch("data/points.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
-      if (!ref) tasks.push(fetch("data/reference.json?v=2", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
+      if (!ref) tasks.push(fetch("data/reference.json?v=3", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
       fetched = p; points = withImports(p); if (r) ref = r; loadedAt = Date.now(); loadErr = null;
     } catch (e) { loadErr = e.message || String(e); }
@@ -692,7 +692,7 @@ td.up{color:var(--no)} td.down{color:var(--ok)}
     const path = pts => pts.map((p, i) => (i ? "L" : "M") + sx(p[0]).toFixed(1) + "," + sy(p[1]).toFixed(1)).join("");
     let s = "";
     const step = niceStep(y1 / 4);
-    for (let y = 0; y <= y1; y += step) s += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--rule)"/><text x="${L - 4}" y="${sy(y) + 3}" text-anchor="end">${y ? Math.round(y / 1e4) + "万" : 0}</text>`;
+    for (let y = 0; y <= y1; y += step) s += `<line x1="${L}" x2="${W - R}" y1="${sy(y)}" y2="${sy(y)}" stroke="var(--rule)"/><text x="${L - 4}" y="${sy(y) + 3}" text-anchor="end">${!y ? 0 : y >= 1e8 ? +(y / 1e8).toFixed(1) + "億" : Math.round(y / 1e4) + "万"}</text>`;
     for (const x of [0, 25, 50, 75, 100]) s += `<text x="${sx(x)}" y="${H - 6}" text-anchor="${x === 100 ? "end" : x === 0 ? "start" : "middle"}">${x}%</text>`;
     if (band.length > 1) {
       s += `<path d="${band.map((b, i) => (i ? "L" : "M") + sx(b[0]).toFixed(1) + "," + sy(b[3]).toFixed(1)).join("")}${[...band].reverse().map(b => "L" + sx(b[0]).toFixed(1) + "," + sy(b[1]).toFixed(1)).join("")}Z" fill="var(--s1)" opacity=".16"/>`;
