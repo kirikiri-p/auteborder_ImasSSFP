@@ -35,10 +35,13 @@
   const back = location.pathname, points = {}; let n = 0, i = 0;
   for (const [name, id] of Object.entries(CH)) {
     msg.textContent = `${++i}/28 ${name}`;
-    history.pushState({}, "", `/channels/${G}/${id}`); dispatchEvent(new PopStateEvent("popstate"));
+    // jump to "now" so Discord shows the newest posts, not where the channel was last scrolled
+    const t = Date.now(), snow = ((BigInt(t) - 1420070400000n) << 22n).toString();
+    history.pushState({}, "", `/channels/${G}/${id}/${snow}`); dispatchEvent(new PopStateEvent("popstate"));
     const sel = `li[id^="chat-messages-${id}-"]`;
-    for (let k = 0; k < 30 && !document.querySelector(sel); k++) await sleep(300);
-    await sleep(900);
+    const age = li => t - Number((BigInt(li.id.split("-").pop()) >> 22n) + 1420070400000n);
+    for (let k = 0; k < 40 && ![...document.querySelectorAll(sel)].some(li => age(li) < 40 * 60000); k++) await sleep(250);
+    await sleep(600);
     for (const li of document.querySelectorAll(sel)) {
       const s = parse(li.innerText); if (!s || new Date(s.end.replace(" ", "T") + ":00+09:00") < Date.now()) continue;
       const ev = points[key(s.start, s.end)] ??= { title: s.title || "ライブイベント", start: s.start, end: s.end, idols: {} };
