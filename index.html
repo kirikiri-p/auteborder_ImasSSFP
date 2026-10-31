@@ -91,7 +91,7 @@ main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bot
 .aux .up{color:var(--no)} .aux .down{color:var(--ok)}
 .face{flex:none;width:30px;height:30px;font-size:.88rem;border-radius:50%;position:relative;overflow:hidden;
   background:color-mix(in srgb,var(--u) 16%,#fff);border:1.5px solid var(--u);display:grid;place-items:center;color:var(--u)}
-.card.top .face{grid-column:2;grid-row:1/span 4;width:76px;height:76px;font-size:1.8rem;border-width:2px}
+.card.top .face{grid-column:2;grid-row:1/span 5;width:76px;height:76px;font-size:1.8rem;border-width:2px}
 .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 12%}
 
 /* panels */
@@ -602,15 +602,16 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     else if (r.status === "off") { fig = `<span class="k">今</span>${man(r.border)}`; aux = ""; }
     else {
       fig = r.pred != null ? `<span class="k">予測</span>${man(r.pred)}` : `<span class="k">今</span>${man(r.border)}`;
-      aux = r.my != null ? `自分 ${man(r.my)}${r.status === "ok" ? "" : `、${GOAL[r.goalKind]}まで${r.hours > 0 ? hrs(r.hours) : "スキップで届く"}`}` : `今 ${man(r.border)}`;
+      aux = r.my != null ? `自分 ${man(r.my)}${r.status === "ok" ? "" : `、${r.hours > 0 ? `${GOAL[r.goalKind]}まで${hrs(r.hours)}` : "スキップで届く"}`}` : `今 ${man(r.border)}`;
     }
     const c = r.cmp[0];
-    if (r.border != null && c && c.ratio) aux += `${aux ? "、" : ""}前回の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>`;
+    const vs = r.border != null && c && c.ratio ? `前回の同じ時点の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>` : "";
     return `<button class="card ${r.status}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
       <span class="who">${top ? "" : face(r.name)}<b>${esc(r.name)}</b>${top ? rank : ""}</span>
       <span class="line2"><span class="state ${r.status}">${stateText(r)}</span>${top ? "" : rank}</span>
       <span class="fig n">${fig}</span>
       <span class="aux">${aux}</span>
+      ${vs ? `<span class="aux">${vs}</span>` : ""}
       ${top ? face(r.name) : ""}</button>`;
   }
 
