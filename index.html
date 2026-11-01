@@ -16,7 +16,7 @@
   --ink:#002841; --ink-2:#45709e; --ink-3:#7e98b4; --rule:rgba(0,40,65,.13);
   --paper:rgba(255,255,255,.86); --solid:#fff; --field:#f3f9fd;
   --prism:linear-gradient(to right,#b4e6fa 0,#f1deff 25%,#f5bde5 50%,#f1deff 75%,#b4e6fa 100%);
-  --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --hit:#6b8f14; --hit-bg:#f4f9e4; --wait:#a9bacb;
+  --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --hit:#6b8f14; --hit-bg:#f4f9e4; --near:#b7791f; --near-bg:#fdf6e7; --wait:#a9bacb;
   --s1:#2f6fc0; --s2:#e2708c; --s3:#2a9d8f;
   --jp:"Humming B","FOT-ハミング Std B","ハミング Std B","Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
   --en:"Raleway","Humming B","Zen Maru Gothic",sans-serif;
@@ -73,10 +73,11 @@ main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bot
 .card.plan::before{background:var(--plan)}
 .card.ok{background:var(--ok-bg)} .card.ok::before{background:var(--ok)}
 .card.hit{background:var(--hit-bg)} .card.hit::before{background:var(--hit)}
+.card.near{background:var(--near-bg)} .card.near::before{background:var(--near)}
 .card.off{opacity:.5}
 .card.top{grid-template-columns:1fr auto;grid-column:span 2;padding:12px 14px 12px 18px;background:rgba(255,255,255,.93)}
 .card.top::before{width:5px}
-.card.top.no{background:var(--no-bg)} .card.top.ok{background:var(--ok-bg)} .card.top.hit{background:var(--hit-bg)}
+.card.top.no{background:var(--no-bg)} .card.top.ok{background:var(--ok-bg)} .card.top.hit{background:var(--hit-bg)} .card.top.near{background:var(--near-bg)}
 .who{display:flex;align-items:center;gap:7px;min-width:0}
 .line2{grid-column:1;display:flex;justify-content:space-between;align-items:center;gap:6px}
 .who b{font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -84,7 +85,7 @@ main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bot
 .rank{font-size:.68rem;line-height:1.5;letter-spacing:.04em;padding:0 6px;white-space:nowrap;border:1px solid var(--ink-3);color:var(--ink-2)}
 .card.top .rank{background:var(--ink);border-color:var(--ink);color:#fff}
 .state{font-size:.72rem;white-space:nowrap;letter-spacing:.04em}
-.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.hit{color:var(--hit)} .state.na,.state.off{color:var(--ink-3)}
+.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.hit{color:var(--hit)} .state.near{color:var(--near)} .state.na,.state.off{color:var(--ink-3)}
 .fig{grid-column:1;font-size:1.15rem;line-height:1.3}
 .card.top .fig{font-size:1.55rem}
 .fig .k{font-family:var(--jp);font-size:.7rem;font-weight:normal;color:var(--ink-2);margin-right:4px;letter-spacing:0}
@@ -240,6 +241,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
           <option value="safe">安全ライン</option>
         </select>
       </label>
+      <label>「予測の手前」にする幅（%）<input id="near" inputmode="decimal"></label>
       <label>曲と曲のあいだ（秒）<input id="gap" inputmode="numeric"></label>
       <label>休み7時間の開始
         <select id="restStart"></select>
@@ -299,7 +301,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   const VIEW_RANKS = ["1", "10", "50", "100", "500", "SS"];
   const rl = rk => rk === "SS" ? "SSランク" : rk + "位";
   const KEY = "shanison-border-v1";
-  const STATE = { no: "足りない", plan: "届く見込み", hit: "予測超え", ok: "安全圏", na: "記録待ち", off: "狙わない" };
+  const STATE = { no: "足りない", plan: "届く見込み", hit: "予測超え", near: "予測の手前", ok: "安全圏", na: "記録待ち", off: "狙わない" };
   const GOAL = { pred: "予測", safe: "安全ライン" };
   const stateText = r => STATE[r.show];
 
@@ -347,6 +349,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   // ---------- songs ----------
   const songById = id => S.songs.find(s => s.id === id);
   const songOf = (name, mode) => songById((S.songBy[name] || {})[mode]) || songById(S.def[mode]) || S.songs[0];
+  const nearPct = () => { const v = num(S.near); return v != null && v >= 0 ? v : 10; };
   const gapSec = () => { const g = num(S.gap); return g != null && g >= 0 ? g : 25; };
   const songRate = s => s && s.len > 0 && s.fans > 0 ? s.fans * 3600 / (s.len + gapSec()) : null;
   const lenOf = v => { const m = String(v ?? "").trim().match(/^(\d+)[:：分](\d{1,2})秒?$/); if (m) return +m[1] * 60 + +m[2]; const x = num(String(v ?? "").replace(/秒$/, "")); return x > 0 ? x : null; };
@@ -529,7 +532,9 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     // what the card shows: the safe line passed, else the prediction passed (a colour of its own), else the plan
     out.forEach(r => {
       const live = r.status !== "off" && r.status !== "na" && r.my != null;
-      r.show = live && r.safe != null && r.my >= r.safe ? "ok" : live && r.pred != null && r.my >= r.pred ? "hit" : r.status;
+      const nearAt = r.pred != null ? r.pred * (1 - nearPct() / 100) : null;
+      r.show = live && r.safe != null && r.my >= r.safe ? "ok" : live && r.pred != null && r.my >= r.pred ? "hit"
+        : live && nearAt != null && nearPct() > 0 && r.my >= nearAt ? "near" : r.status;
     });
     const total = out.filter(r => r.status !== "off" && r.hours != null).reduce((a, r) => a + r.hours, 0);
     return { ev, leftH, avail, used, total, todayH, pool, rows: out };
@@ -558,7 +563,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     $("#notice").innerHTML = notes.join("");
 
     const counted = rows.filter(r => r.status !== "off");
-    const got = counted.filter(r => ["ok", "hit", "plan"].includes(r.show)).length;
+    const got = counted.filter(r => ["ok", "hit"].includes(r.show) || r.status === "plan").length;
     $("#stats").innerHTML = [
       ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
       ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
@@ -570,7 +575,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     $("#units").innerHTML = UNITS.map(u => {
       const ord = r => { const i = TARGETS.indexOf(r.tgt); return i < 0 ? 99 : i; };
       const rs = u.members.map(m => rows.find(r => r.name === m)).sort((a, b) => ord(a) - ord(b));
-      const bad = rs.filter(r => r.show === "no").length;
+      const bad = rs.filter(r => r.status === "no" && !["ok", "hit"].includes(r.show)).length;
       return `<section class="unit" style="--u:${u.color}${u.text ? `;--ut:${u.text}` : ""}">
         <div class="ribbon"><b>${esc(u.name)}</b>${u.name !== u.kana ? `<span>${esc(u.kana)}</span>` : ""}${bad ? `<span class="alert">足りない ${bad}人</span>` : ""}</div>
         <div class="members">${rs.map(card).join("")}</div></section>`;
@@ -941,10 +946,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   $("#units").addEventListener("click", e => { const c = e.target.closest("[data-open]"); if (c) openSheet(c.dataset.open); });
   const put = (id, v) => { $(id).value = v ?? ""; };
   $("#restStart").innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}">${h}:00〜${(h + 7) % 24}:00</option>`).join("");
-  put("#basis", S.basis); put("#judge", S.judge || "stage"); put("#margin", S.margin); put("#gap", gapSec()); put("#restStart", S.restStart); put("#busy", S.busy);
+  put("#basis", S.basis); put("#judge", S.judge || "stage"); put("#margin", S.margin); put("#gap", gapSec()); put("#near", nearPct()); put("#restStart", S.restStart); put("#busy", S.busy);
   $("#basis").addEventListener("change", e => { S.basis = e.target.value; save(); render(); });
   $("#judge").addEventListener("change", e => { S.judge = e.target.value; save(); render(); });
   $("#margin").addEventListener("change", e => { S.margin = num(e.target.value) || 0; save(); render(); });
+  $("#near").addEventListener("change", e => { const v = num(e.target.value); if (v != null && v >= 0) S.near = v; put("#near", nearPct()); save(); render(); });
   $("#gap").addEventListener("change", e => { const v = num(e.target.value); if (v != null && v >= 0) S.gap = v; put("#gap", gapSec()); save(); buildSongs(); render(); });
   const setLeft = (k, v) => { const now = Date.now(), lt = todayLeft(now), max = k === "skip" ? SKIP_DAY : AUTO_DAY;
     const x = num(v); if (x != null) lt[k] = Math.max(0, Math.min(max, Math.round(x)));
