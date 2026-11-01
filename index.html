@@ -184,6 +184,7 @@ table.ranks tr.on td{background:#e6f0fa}
 table.ov{margin-top:8px}
 table.ov tbody tr{cursor:pointer}
 table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
+#dayBody td:first-child{border-left:3px solid var(--u,#888);padding-left:8px} #dayBody tr{cursor:pointer}
 @media (prefers-reduced-motion:no-preference){dialog[open]{animation:rise .22s ease-out}@keyframes rise{from{transform:translateY(24px);opacity:.4}}}
 </style>
 </head>
@@ -208,6 +209,13 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     <div class="seg seg-rank" id="ovSeg" role="group" aria-label="順位" style="margin-top:10px"></div>
     <table class="cmp ov"><thead><tr><th></th><th>今</th><th>予測最終</th><th>前回最終</th></tr></thead><tbody id="ovBody"></tbody></table>
     <p class="note" id="ovNote"></p>
+  </details>
+  <details class="box" id="dayBox">
+    <summary>24時の予測</summary>
+    <div class="seg" id="daySeg" role="group" aria-label="日付" style="margin-top:10px"></div>
+    <label class="busy" style="margin-top:8px;max-width:180px">目標にする倍率<input id="dayK" inputmode="decimal"></label>
+    <table class="cmp"><thead><tr><th>アイドル</th><th>順位</th><th>24時の予測</th><th id="dayKh">×1.2</th><th>自分</th><th>あと</th></tr></thead><tbody id="dayBody"></tbody></table>
+    <p class="note" id="dayNote"></p>
   </details>
   <details class="box">
     <summary>今日の配分</summary>
@@ -614,6 +622,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     if (ae !== $("#autoLeft")) $("#autoLeft").value = lt.auto;
 
     renderPcup();
+    renderDay();
     renderOverview();
     if (openName && $("#sheet").open) fillSheet(openName);
   }
@@ -846,6 +855,40 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     const a = solo(r.need, P.leader), b = solo(r.need, P.member);
     return `<p class="split">Pカップだけなら リーダーで <b class="n">${(a * P.lb).toLocaleString("ja-JP")}</b> LB（${a.toLocaleString("ja-JP")}周）／メンバーで <b class="n">${(b * P.lb).toLocaleString("ja-JP")}</b> LB（${b.toLocaleString("ja-JP")}周）</p>`;
   }
+
+  // ---------- prediction as of 24:00 on a chosen day ----------
+  // Uses the last post at or before the next day's 0:00 (the bot posts at 23:58, 23:59 and sometimes 0:00) and the
+  // same prediction as the cards (border x median of the past events' final/now ratios at that point).
+  let dayPick = null;
+  const dayK = () => { const v = num(S.dayK); return v > 0 ? v : 1.2; };
+  function predOn(name, rk, ev, until) {
+    const ci = COL[rk], pts = ((ev && ev.idols[name]) || []).filter(p => p[ci] != null && p[0] <= until).sort((a, b) => a[0] < b[0] ? -1 : 1);
+    const lp = pts[pts.length - 1]; if (!lp || !ref) return null;
+    const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
+    return rs.length ? { at: lp[0], border: lp[ci], pred: lp[1] >= 99.99 ? lp[ci] : lp[ci] * q(rs, .5) } : null;
+  }
+  function renderDay() {
+    const ev = ctx && ctx.ev; if (!ev) { $("#dayBody").innerHTML = ""; $("#dayNote").textContent = "イベントが始まると出ます。"; return; }
+    const D0 = jst(ev.start.slice(0, 10) + " 00:00").getTime(), endT = jst(ev.end).getTime(), now = Date.now(), days = [];
+    for (let t = D0 + D; t <= Math.min(now, endT + D); t += D) days.push(dkey(t - D));   // days whose 24:00 has passed
+    if (!days.length) { $("#dayBody").innerHTML = ""; $("#dayNote").textContent = "最初の24時が来ると出ます。"; return; }
+    if (!dayPick || !days.includes(dayPick)) dayPick = days[days.length - 1];
+    $("#daySeg").innerHTML = days.map(d => `<button type="button" data-day="${d}" class="${d === dayPick ? "on" : ""}">${+d.slice(5, 7)}/${+d.slice(8)}</button>`).join("");
+    const until = dkeyTime(jst(dayPick + " 00:00").getTime() + D), k = dayK();
+    $("#dayKh").textContent = "×" + k;
+    if (document.activeElement !== $("#dayK")) $("#dayK").value = k;
+    let need = 0, used = new Set();
+    $("#dayBody").innerHTML = rows.filter(r => r.tgt !== "off").map(r => {
+      const p = predOn(r.name, r.rk, ev, until); if (!p) return "";
+      used.add(p.at); const goal = p.pred * k, left = Math.max(0, goal - (r.my || 0)); need += left;
+      return `<tr data-open="${esc(r.name)}" style="--u:${UNIT_OF[r.name].color}"><td>${esc(r.name)}</td><td>${short(r.rk)}</td><td class="n">${man(p.pred)}</td><td class="n">${man(goal)}</td><td class="n">${man(r.my)}</td><td class="n${left > 0 ? "" : " down"}">${left > 0 ? man(left) : "達成"}</td></tr>`;
+    }).join("");
+    const at = [...used].sort();
+    $("#dayNote").textContent = `${at.length ? `使った投稿：${at[0].slice(5).replace("-", "/")}${at.length > 1 ? `〜${at[at.length - 1].slice(11)}` : ""}。` : ""}あとの合計 ${man(need)}。順位はカードで選んだもの。自分のスコアは最新の記録。`;
+  }
+  $("#daySeg").addEventListener("click", e => { const b = e.target.closest("[data-day]"); if (b) { dayPick = b.dataset.day; renderDay(); } });
+  $("#dayBody").addEventListener("click", e => { const t = e.target.closest("[data-open]"); if (t) openSheet(t.dataset.open); });
+  $("#dayK").addEventListener("change", e => { const v = num(e.target.value); if (v > 0) S.dayK = v; save(); renderDay(); });
 
   function renderOverview() {
     $("#ovSeg").innerHTML = VIEW_RANKS.map(k => `<button type="button" data-ov="${k}" class="${k === ovRank ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
