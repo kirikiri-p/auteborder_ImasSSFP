@@ -16,7 +16,7 @@
   --ink:#002841; --ink-2:#45709e; --ink-3:#7e98b4; --rule:rgba(0,40,65,.13);
   --paper:rgba(255,255,255,.86); --solid:#fff; --field:#f3f9fd;
   --prism:linear-gradient(to right,#b4e6fa 0,#f1deff 25%,#f5bde5 50%,#f1deff 75%,#b4e6fa 100%);
-  --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --wait:#a9bacb;
+  --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --hit:#6b8f14; --hit-bg:#f4f9e4; --wait:#a9bacb;
   --s1:#2f6fc0; --s2:#e2708c; --s3:#2a9d8f;
   --jp:"Humming B","FOT-ハミング Std B","ハミング Std B","Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
   --en:"Raleway","Humming B","Zen Maru Gothic",sans-serif;
@@ -72,10 +72,11 @@ main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bot
 .card.no{background:var(--no-bg)} .card.no::before{background:var(--no)}
 .card.plan::before{background:var(--plan)}
 .card.ok{background:var(--ok-bg)} .card.ok::before{background:var(--ok)}
+.card.hit{background:var(--hit-bg)} .card.hit::before{background:var(--hit)}
 .card.off{opacity:.5}
 .card.top{grid-template-columns:1fr auto;grid-column:span 2;padding:12px 14px 12px 18px;background:rgba(255,255,255,.93)}
 .card.top::before{width:5px}
-.card.top.no{background:var(--no-bg)} .card.top.ok{background:var(--ok-bg)}
+.card.top.no{background:var(--no-bg)} .card.top.ok{background:var(--ok-bg)} .card.top.hit{background:var(--hit-bg)}
 .who{display:flex;align-items:center;gap:7px;min-width:0}
 .line2{grid-column:1;display:flex;justify-content:space-between;align-items:center;gap:6px}
 .who b{font-weight:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -83,7 +84,7 @@ main.in{display:flex;flex-direction:column;gap:26px;padding-top:14px;padding-bot
 .rank{font-size:.68rem;line-height:1.5;letter-spacing:.04em;padding:0 6px;white-space:nowrap;border:1px solid var(--ink-3);color:var(--ink-2)}
 .card.top .rank{background:var(--ink);border-color:var(--ink);color:#fff}
 .state{font-size:.72rem;white-space:nowrap;letter-spacing:.04em}
-.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.na,.state.off{color:var(--ink-3)}
+.state.no{color:var(--no)} .state.plan{color:var(--plan)} .state.ok{color:var(--ok)} .state.hit{color:var(--hit)} .state.na,.state.off{color:var(--ink-3)}
 .fig{grid-column:1;font-size:1.15rem;line-height:1.3}
 .card.top .fig{font-size:1.55rem}
 .fig .k{font-family:var(--jp);font-size:.7rem;font-weight:normal;color:var(--ink-2);margin-right:4px;letter-spacing:0}
@@ -211,6 +212,16 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     <summary>今日の配分</summary>
     <div id="today"></div>
   </details>
+  <details class="box" id="pcupBox">
+    <summary>Pカップ<span id="pcupSum"></span></summary>
+    <div class="form">
+      <label>パーティの人数<input id="pcSize" inputmode="numeric"></label>
+      <label>1周のLB<input id="pcLb" inputmode="numeric"></label>
+      <label>メンバー1人に（1周）<input id="pcMember" inputmode="numeric"></label>
+      <label>リーダーに（1周）<input id="pcLeader" inputmode="numeric"></label>
+    </div>
+    <div id="pcup"></div>
+  </details>
   <details class="box">
     <summary>設定</summary>
     <div class="form">
@@ -288,20 +299,21 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   const VIEW_RANKS = ["1", "10", "50", "100", "500", "SS"];
   const rl = rk => rk === "SS" ? "SSランク" : rk + "位";
   const KEY = "shanison-border-v1";
-  const STATE = { no: "足りない", plan: "届く見込み", ok: "安全圏", na: "記録待ち", off: "狙わない" };
+  const STATE = { no: "足りない", plan: "届く見込み", hit: "予測超え", ok: "安全圏", na: "記録待ち", off: "狙わない" };
   const GOAL = { pred: "予測", safe: "安全ライン" };
-  const stateText = r => r.status === "ok" && r.goalKind === "pred" ? "予測超え" : STATE[r.status];
+  const stateText = r => STATE[r.show];
 
   // ---------- settings ----------
   const MODES = { play: "手動の曲", auto: "オートの曲", skip: "スキップの曲" };
   const SKIP_DAY = 20, AUTO_DAY = 50;
   const defaults = () => ({ basis: "max", judge: "stage", margin: 0, gap: null, restStart: 0, busy: "2026-11-05 18:00-21:00\n2026-11-06 14:00-18:00",
     songs: [{ id: "s1", name: "星の数だけ（アニメVer.）MASTER", len: 125, fans: 25000 }],
-    def: { play: "s1", auto: "s1", skip: "s1" }, songBy: {}, left: null,
+    def: { play: "s1", auto: "s1", skip: "s1" }, songBy: {}, left: null, pcup: { size: 5, lb: 20, member: 4400, leader: 8800 },
     target: Object.fromEntries(IDOLS.map(n => [n, TOP100.includes(n) ? "100" : "500"])), my: {}, rateBy: {}, hist: {} });
   let S = defaults();
   try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) S = Object.assign(defaults(), s, { target: Object.assign(defaults().target, s.target || {}), def: Object.assign(defaults().def, s.def || {}) }); } catch (e) {}
   if (!Array.isArray(S.songs) || !S.songs.length) S.songs = defaults().songs;
+  S.pcup = Object.assign(defaults().pcup, S.pcup || {});
   if (S.gap == null) {   // older versions kept one hourly rate (25,000 per play); turn it into the gap after a 125-second song
     const r = parseFloat(S.rate);
     S.gap = r > 0 && r !== 750000 ? Math.max(0, Math.round(25000 * 3600 / r) - 125) : 25;
@@ -514,6 +526,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       else if (avail != null && used + r.hours <= avail + 1e-9) { used += r.hours; r.status = "plan"; }
       else r.status = "no";
     });
+    // what the card shows: the safe line passed, else the prediction passed (a colour of its own), else the plan
+    out.forEach(r => {
+      const live = r.status !== "off" && r.status !== "na" && r.my != null;
+      r.show = live && r.safe != null && r.my >= r.safe ? "ok" : live && r.pred != null && r.my >= r.pred ? "hit" : r.status;
+    });
     const total = out.filter(r => r.status !== "off" && r.hours != null).reduce((a, r) => a + r.hours, 0);
     return { ev, leftH, avail, used, total, todayH, pool, rows: out };
   }
@@ -541,7 +558,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     $("#notice").innerHTML = notes.join("");
 
     const counted = rows.filter(r => r.status !== "off");
-    const got = counted.filter(r => r.status === "ok" || r.status === "plan").length;
+    const got = counted.filter(r => ["ok", "hit", "plan"].includes(r.show)).length;
     $("#stats").innerHTML = [
       ["取れる見込み", ev ? `${got}<small>/${counted.length}人</small>` : "—"],
       ["経過率", lastPct != null ? `${lastPct.toFixed(1)}<small>%</small>` : "—"],
@@ -553,7 +570,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     $("#units").innerHTML = UNITS.map(u => {
       const ord = r => { const i = TARGETS.indexOf(r.tgt); return i < 0 ? 99 : i; };
       const rs = u.members.map(m => rows.find(r => r.name === m)).sort((a, b) => ord(a) - ord(b));
-      const bad = rs.filter(r => r.status === "no").length;
+      const bad = rs.filter(r => r.show === "no").length;
       return `<section class="unit" style="--u:${u.color}${u.text ? `;--ut:${u.text}` : ""}">
         <div class="ribbon"><b>${esc(u.name)}</b>${u.name !== u.kana ? `<span>${esc(u.kana)}</span>` : ""}${bad ? `<span class="alert">足りない ${bad}人</span>` : ""}</div>
         <div class="members">${rs.map(card).join("")}</div></section>`;
@@ -587,6 +604,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     if (ae !== $("#skipLeft")) $("#skipLeft").value = lt.skip;
     if (ae !== $("#autoLeft")) $("#autoLeft").value = lt.auto;
 
+    renderPcup();
     renderOverview();
     if (openName && $("#sheet").open) fillSheet(openName);
   }
@@ -606,9 +624,9 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     }
     const c = r.cmp[0];
     const vs = r.border != null && c && c.ratio ? `前回の同じ時点の<span class="${c.ratio >= 1 ? "up" : "down"}">${xr(c.ratio)}</span>` : "";
-    return `<button class="card ${r.status}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
+    return `<button class="card ${r.show}${top ? " top" : ""}" type="button" data-open="${esc(r.name)}">
       <span class="who">${top ? "" : face(r.name)}<b>${esc(r.name)}</b>${top ? rank : ""}</span>
-      <span class="line2"><span class="state ${r.status}">${stateText(r)}</span>${top ? "" : rank}</span>
+      <span class="line2"><span class="state ${r.show}">${stateText(r)}</span>${top ? "" : rank}</span>
       <span class="fig n">${fig}</span>
       <span class="aux">${aux}</span>
       ${vs ? `<span class="aux">${vs}</span>` : ""}
@@ -630,7 +648,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         <h3 id="sheetTitle">${esc(name)}<small>${esc(u.name)}</small></h3>
         <button type="button" class="close" data-close>閉じる</button></div>
       <div class="sheet-body">
-        <div class="bar"><span class="state ${r.status}" style="font-size:.9rem">${stateText(r)}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
+        <div class="bar"><span class="state ${r.show}" style="font-size:.9rem">${stateText(r)}</span><span class="seg" role="group" aria-label="狙う順位">${tg}</span></div>
         <div class="facts">
           <div><span class="k">今の${rl(r.rk)}</span><span class="v n">${man(r.border)}</span></div>
           <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
@@ -638,6 +656,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         <div class="myrow"><label for="myIn">自分のスコア${r.myAt ? `<small class="meas">（${esc(r.myAt.slice(5).replace("-", "/"))}）</small>` : ""}</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
           <span>${r.need != null ? (r.need > 0 ? `${GOAL[r.goalKind]}まで あと <b class="n">${man(r.need)}</b>、${r.hours > 0 ? `<b class="n">${hrs(r.hours)}</b>` : "スキップで届く"}` : `${GOAL[r.goalKind]}を超えています`) : ""}</span></div>
         ${splitLine(r)}
+        ${pcupLine(r)}
         <div class="songpick">${Object.keys(MODES).map(m => `<label>${MODES[m]}<select data-song="${m}">${songOpts(name, m)}</select></label>`).join("")}</div>
         <div class="myrow"><label for="rateIn">この子の時速</label><input id="rateIn" inputmode="numeric" placeholder="${esc(man(r.rateSong))}（曲から）" value="${esc(r.rateOwn ? full(r.rateOwn) : "")}">
           ${r.meas ? `<span class="meas">前回の入力から <b class="n">+${man(r.meas.ds)}</b>／${hrs(r.meas.dh)} ＝ <b class="n">${man(r.meas.rate)}</b>/時 <button type="button" class="use" data-use="${Math.round(r.meas.rate)}">この時速を使う</button></span>`
@@ -779,6 +798,45 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   }
 
   let ovRank = "1";
+  // ---------- P cup ----------
+  // One lap costs P.lb LB and gives every party member P.member fans, the leader P.leader. Each lap the idol
+  // with the most left leads and the next (size - 1) join, so the party is reshuffled every lap.
+  function pcupPlan(list) {
+    const P = S.pcup, k = Math.max(1, Math.round(P.size) || 1);
+    if (!(P.member > 0 && P.leader > 0 && P.lb > 0)) return null;
+    const left = list.map(r => ({ r, n: r.need, lead: 0, laps: 0 }));
+    let laps = 0;
+    while (laps < 100000) {
+      left.sort((a, b) => b.n - a.n);
+      if (!(left.length && left[0].n > 0)) break;
+      left.slice(0, k).forEach((x, i) => { if (x.n <= 0) return; x.n = Math.max(0, x.n - (i ? P.member : P.leader)); x.laps++; if (!i) x.lead++; });
+      laps++;
+    }
+    const sum = list.reduce((a, r) => a + r.need, 0), mx = Math.max(0, ...list.map(r => r.need));
+    const floor = Math.max(Math.ceil(sum / (P.member * (k - 1) + P.leader)), Math.ceil(mx / P.leader));
+    return { laps, lb: laps * P.lb, floor, k, rows: left.sort((a, b) => b.r.need - a.r.need) };
+  }
+  const solo = (need, per) => Math.ceil(need / per);
+  function renderPcup() {
+    const P = S.pcup, list = rows.filter(r => r.status !== "off" && r.need > 0);
+    const plan = ctx.ev ? pcupPlan(list) : null;
+    $("#pcupSum").textContent = plan && plan.laps ? `（あと ${plan.lb.toLocaleString("ja-JP")} LB）` : "";
+    if (!ctx.ev) { $("#pcup").innerHTML = `<p class="note">イベントが始まると出ます。</p>`; return; }
+    if (!plan) { $("#pcup").innerHTML = `<p class="note">上の4つの欄を入れると出ます。</p>`; return; }
+    if (!plan.laps) { $("#pcup").innerHTML = `<p class="note">今の目標まで、足りない子はいません。</p>`; return; }
+    const noMy = list.filter(r => r.my == null).length;
+    $("#pcup").innerHTML = `<p class="split">全員を今の目標まで <b class="n">${plan.laps.toLocaleString("ja-JP")}</b>周・<b class="n">${plan.lb.toLocaleString("ja-JP")}</b> LB</p>
+      <p class="note">毎周、残りがいちばん多い子をリーダーに、次に多い${plan.k - 1}人をメンバーにした場合。どう組んでも${plan.floor.toLocaleString("ja-JP")}周（${(plan.floor * P.lb).toLocaleString("ja-JP")} LB）より少なくはなりません。スキップ・オート・手動の分は引かず、残りを全部Pカップで埋める計算です。${noMy ? `自分のスコアが入っていない${noMy}人は0から数えています。` : ""}</p>
+      <table class="cmp"><thead><tr><th>アイドル</th><th>あと</th><th>リーダー</th><th>出る周</th></tr></thead><tbody>${plan.rows.map(x =>
+        `<tr><td>${esc(x.r.name)}</td><td class="n">${man(x.r.need)}</td><td class="n">${x.lead.toLocaleString("ja-JP")}</td><td class="n">${x.laps.toLocaleString("ja-JP")}</td></tr>`).join("")}</tbody></table>`;
+  }
+  function pcupLine(r) {
+    const P = S.pcup;
+    if (!(r.need > 0 && P.member > 0 && P.leader > 0 && P.lb > 0)) return "";
+    const a = solo(r.need, P.leader), b = solo(r.need, P.member);
+    return `<p class="split">Pカップだけなら リーダーで <b class="n">${(a * P.lb).toLocaleString("ja-JP")}</b> LB（${a.toLocaleString("ja-JP")}周）／メンバーで <b class="n">${(b * P.lb).toLocaleString("ja-JP")}</b> LB（${b.toLocaleString("ja-JP")}周）</p>`;
+  }
+
   function renderOverview() {
     $("#ovSeg").innerHTML = VIEW_RANKS.map(k => `<button type="button" data-ov="${k}" class="${k === ovRank ? "on" : ""}">${k === "SS" ? "SS" : k + "位"}</button>`).join("");
     const ev = ctx && ctx.ev; let anyX = false;
@@ -896,6 +954,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   $("#restStart").addEventListener("change", e => { S.restStart = +e.target.value; save(); render(); });
   $("#busy").addEventListener("change", e => { S.busy = e.target.value; save(); render(); });
   $("#reload").addEventListener("click", load);
+  const PC = { pcSize: "size", pcLb: "lb", pcMember: "member", pcLeader: "leader" };
+  for (const [id, f] of Object.entries(PC)) {
+    put("#" + id, full(S.pcup[f]));
+    $("#" + id).addEventListener("change", e => { const v = num(e.target.value); if (v > 0) S.pcup[f] = f === "size" ? Math.round(v) : v; put("#" + id, full(S.pcup[f])); save(); render(); });
+  }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && (!loadedAt || Date.now() - loadedAt > 60000)) load(); });
   setInterval(() => { if (!document.hidden) load(); }, 3 * 60 * 1000);
   buildSongs();
