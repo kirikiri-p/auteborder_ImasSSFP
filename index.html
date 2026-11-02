@@ -510,7 +510,8 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         if (r.final) r.safe = r.border;
         else if (r.rs) {
           const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(r.rs, .9) : r.med;
-          r.safe = r.border * base * (r.adj || 1) * (1 + (num(S.margin) || 0) / 100);
+          const fs = S.basis === "max" && fixed && fixed.safe && (fixed.safe[name] || {})[rk];   // tools/model.py safe_line
+          r.safe = (fs || r.border * base * (r.adj || 1)) * (1 + (num(S.margin) || 0) / 100);
         }
         // goal: the predicted final, or the safe line; "stage" uses the prediction until your score passes it
         const j = S.judge || "stage";

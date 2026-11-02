@@ -49,7 +49,15 @@ for n in ev:
     if lp[0] >= plan["lock_from"]: G.setdefault("locked", {})[n] = True
     G[key][n] = g; G["now"][n] = {"rank": rk, "pred": round(p), "margin": round(mg, 3), "reserve": round(p * model.margin(rk, lp[1])), "at": lp[0]}
     if old and abs(g - old) >= 5000: changed.append(f"{n} {old/1e4:.1f}万→{g/1e4:.1f}万")
+# Safe lines (model.safe_line): only come down as the end nears; "broken" = it had to go up this time
+G["safe"] = {}; broken = []
+for n in ev:
+    for rk in ("1", "10", "50", "100", "500"):
+        v, br = model.safe_line(ev[n], rk)
+        if v: G["safe"].setdefault(n, {})[rk] = v
+        if br and rk in ("100", "500") and (rk == "100") == (n in plan["top100"]): broken.append(f"{n} {rk}位")
 open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
+print("safe line went up (prediction ran past the past events):", broken or "none")
 print("goals changed:", changed or "none")
 for n in plan["top100"]:
     g = G["goals100"][n]; d = G["now"][n]

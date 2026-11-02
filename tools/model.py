@@ -38,6 +38,7 @@ def _build():
                     if x and y and 1/x > 1/y: vals.append((1 - 1/x) / (1/x - 1/y))
             Ms.append(round(st.median(vals), 4) if len(vals) >= 10 else None)
         out["ranks"][rk] = {"M": Ms}
+        mx = []
         for i, p in enumerate(grid):   # cross-event coverage of the mixed prediction
             cov = []
             for A, B in (("2026-05-09", "2025-11-01"), ("2025-11-01", "2026-05-09")):
@@ -56,12 +57,13 @@ def _build():
                     d = 24 / HOURS[A] * 100; y = ratio(c, p - d) if p - d >= c[0][0] else None
                     if M and y: pr = math.sqrt(pa * (b + (b - 1/y) * M))
                     cov.append(1 / pr)
-            cov.sort(); m90.append(cov[int(0.9 * (len(cov) - 1))] if len(cov) >= 10 else None)
-        env, run = [None] * len(grid), 1.0   # non-increasing in p, at least 1
-        for i in range(len(grid) - 1, -1, -1):
-            if m90[i] is not None: run = max(run, m90[i])
-            env[i] = round(run, 4)
-        out["ranks"][rk]["m90"] = env
+            cov.sort(); m90.append(cov[int(0.9 * (len(cov) - 1))] if len(cov) >= 10 else None); mx.append(cov[-1] if len(cov) >= 10 else None)
+        for name, arr in (("m90", m90), ("mmax", mx)):   # non-increasing in p, at least 1
+            env, run = [None] * len(grid), 1.0
+            for i in range(len(grid) - 1, -1, -1):
+                if arr[i] is not None: run = max(run, arr[i])
+                env[i] = round(run, 4)
+            out["ranks"][rk][name] = env
     json.dump(out, open(os.path.join(ROOT, "data/model.json"), "w"), indent=0)
     return out
 
@@ -79,12 +81,14 @@ def at(arr, p):
     if a is None or b is None: return a if b is None else b
     return a + (b - a) * (p - g[i]) / 0.5
 
-_R = None
+_R = None; _MR = {}
 def medratio(rk, p):
     global _R
+    if (rk, p) in _MR: return _MR[(rk, p)]
     if _R is None: _R = json.load(open(os.path.join(ROOT, "data/reference.json")))
     rs = [r for r in (ratio(z["curve"], p) for z in _R["refs"] if z["rank"] == rk) if r]
-    return st.median(rs) if rs else None
+    _MR[(rk, p)] = st.median(rs) if rs else None
+    return _MR[(rk, p)]
 
 def pred(rows, rk, upto=None):
     """rows: the event's points for one idol. Returns (pred, row used) for the last row at or before upto."""
@@ -103,6 +107,26 @@ def pred(rows, rk, upto=None):
     return math.sqrt(a * b), lp
 
 def margin(rk, p): return at(model()["ranks"][rk]["m90"], p)
+def bound(rk, p): return at(model()["ranks"][rk]["mmax"], p)
+
+def safe_line(rows, rk, step_h=3):
+    """'Safe line': the largest final the past events allow, pred x mmax(p) (the worst miss seen when one past
+    event predicted the other). Kept as a running minimum over the posts every step_h hours, so it only comes
+    down as the end nears; if the prediction now x m90 rises above it, the bound was broken and it restarts there.
+    Returns (line, broken)."""
+    ci = COL[rk]; rows = [r for r in rows if r[ci]]
+    if not rows: return None, False
+    line = None; broken = False; last = None
+    for i, r in enumerate(rows):
+        t = dt.datetime.strptime(r[0], "%Y-%m-%d %H:%M")
+        if i != len(rows) - 1 and last and (t - last).total_seconds() < step_h * 3600: continue
+        last = t
+        p, lp = pred(rows[:i + 1], rk)
+        if not p: continue
+        u = p * bound(rk, lp[1])
+        if line is None or u < line: line = u
+        if p * margin(rk, lp[1]) > line: line, broken = u, (i == len(rows) - 1) or broken
+    return round(line), broken
 
 if __name__ == "__main__":
     o = _build()
