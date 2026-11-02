@@ -2,8 +2,8 @@
 
   python3 tools/merge_export.py --borders exp.txt          # lines from __export(): name|MMDDHHMM,1,12,50,100,500,10,SS;...
   python3 tools/merge_export.py --my "2026-11-02 14:37" scores.json   # {"幽谷霧子": 2342960, ...} (all 28)
-Prints what changed, raises 500th goals by goals.json "rule" (running max of the prediction x factor), the goals still open and idols whose 500th prediction is now above
-the recorded 0:00 one (pred500). Commit and push afterwards.
+Prints what changed, resets the goals by goals.json "plan" (prediction x 90% margin, see tools/model.py), the goals
+still open and idols whose 500th prediction is now above the last 0:00 record (pred500). Commit and push afterwards.
 """
 import argparse, datetime as dt, json, os, statistics as st, sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))); os.chdir(ROOT); sys.path.insert(0, ROOT)
@@ -32,45 +32,30 @@ if a.my:
         if s[k] != my[k]: print(k, my[k], "->", s[k], "+%d" % (s[k] - my[k]), "DOWN?" if s[k] < my[k] else "")
     M["history"].append({"time": a.my[0], "scores": s}); my = s
     open("data/my.json", "w", encoding="utf-8").write(json.dumps(M, ensure_ascii=False, indent=1) + "\n")
-G = json.load(open("data/goals.json", encoding="utf-8")); R = json.load(open("data/reference.json"))
-def ratio(c, p):
-    if p < c[0][0]: return None
-    for i in range(1, len(c)):
-        if c[i][0] >= p:
-            x, y = c[i-1], c[i]; return x[1] + (y[1]-x[1])*(p-x[0])/(y[0]-x[0]) if y[0] > x[0] else y[1]
-    return 1
-def pred500(row): return row[6] * st.median([x for x in (ratio(z["curve"], row[1]) for z in R["refs"] if z["rank"] == "500") if x])
-# Running-max rule (goals.json "rule"): from rule.since on, a 500th goal is the highest prediction seen so far x factor,
-# never lowered. pred500 follows the running max, so the "above" list below only shows a new high.
-rule = G.get("rule")
-if rule:
-    raised = []
-    for n in G["goals"]:
-        if n in rule.get("skip", []): continue
-        best = max(((pred500(r), r[0]) for r in ev[n] if r[0] >= rule["since"] and r[6]), default=None)
-        if not best: continue
-        G.setdefault("maxpred", {})[n] = [round(best[0]), best[1]]
-        g = round(best[0] * rule["factor"])
-        if g > G["goals"][n]: raised.append(f"{n} {G['goals'][n]/1e4:.1f}万→{g/1e4:.1f}万"); G["goals"][n] = g
-        if round(best[0]) > G["pred500"].get(n, 0): G["pred500"][n] = round(best[0])
-    open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
-    print("goals raised (max prediction since %s x%s):" % (rule["since"], rule["factor"]), raised or "none")
-# 100th goals (goals.json "rule100"): running max of the 100th prediction since rule100.since x factor
-# (factor_late for posts from late_from on), never lowered.
-r1 = G.get("rule100")
-if r1:
-    def pred100(row): return row[5] * st.median([x for x in (ratio(z["curve"], row[1]) for z in R["refs"] if z["rank"] == "100") if x])
-    for n in r1["idols"]:
-        cands = [(pred100(r) * (r1["factor_late"] if r[0] >= r1["late_from"] else r1["factor"]), r[0]) for r in ev[n] if r[0] >= r1["since"] and r[5]]
-        if not cands: continue
-        g, at = max(cands); g = round(g); G.setdefault("goals100", {})
-        if g > G["goals100"].get(n, 0): G["goals100"][n] = g
-        print(f"100th goal {n}: {G['goals100'][n]/1e4:.1f}万 (now {my[n]/1e4:.1f}万, " + (f"あと{(G['goals100'][n]-my[n])/1e4:.1f}万)" if my[n] < G['goals100'][n] else "reached)"))
-    open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
-left = {n: g - my[n] for n, g in G["goals"].items() if g > my[n]}
+G = json.load(open("data/goals.json", encoding="utf-8"))
+import model   # tools/model.py: mixed prediction (level x this event's 24 h pace) and the 90% margins
+# Goals (goals.json "plan"): goal = prediction now x m90(rank, plan.margin_at %) -- the 90% margin of the last hours,
+# since the prediction itself is redone on every update. "reserve" = prediction x m90 at the elapsed % now (worst case).
+# Before plan.lock_from (the last day) a goal follows the prediction up and down; from then on it is never lowered.
+plan = G["plan"]; G.setdefault("goals100", {}); G["now"] = {}
+changed = []
+for n in ev:
+    rk = "100" if n in plan["top100"] else "500"
+    p, lp = model.pred(ev[n], rk)
+    if p is None: continue
+    mg = model.margin(rk, plan.get("margin_at", lp[1])); g = round(p * mg); key = "goals100" if rk == "100" else "goals"
+    old = G[key].get(n)
+    if lp[0] >= plan["lock_from"] and old and G.get("locked", {}).get(n) and old > g: g = old
+    if lp[0] >= plan["lock_from"]: G.setdefault("locked", {})[n] = True
+    G[key][n] = g; G["now"][n] = {"rank": rk, "pred": round(p), "margin": round(mg, 3), "reserve": round(p * model.margin(rk, lp[1])), "at": lp[0]}
+    if old and abs(g - old) >= 5000: changed.append(f"{n} {old/1e4:.1f}万→{g/1e4:.1f}万")
+open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
+print("goals changed:", changed or "none")
+for n in plan["top100"]:
+    g = G["goals100"][n]; d = G["now"][n]
+    print(f"100th {n}: pred {d['pred']/1e4:.1f}万 x{d['margin']} = goal {g/1e4:.1f}万, now {my[n]/1e4:.1f}万, " + (f"あと{(g-my[n])/1e4:.1f}万" if my[n] < g else "reached") + f" (worst case now {d['reserve']/1e4:.0f}万)")
+left = {n: g - my[n] for n, g in G["goals"].items() if g > my[n] and n not in plan["top100"]}
 print("500 goals open: %.1f万" % (sum(left.values()) / 1e4), {n: round(v / 1e4, 1) for n, v in sorted(left.items(), key=lambda x: -x[1])})
-up = []
-for n, rec in G.get("pred500", {}).items():
-    lp = ev[n][-1]; p = lp[6] * st.median([x for x in (ratio(z["curve"], lp[1]) for z in R["refs"] if z["rank"] == "500") if x])
-    if round(p) > rec and n not in (rule or {}).get("skip", []): up.append(f"{n} {rec/1e4:.1f}万→{p/1e4:.1f}万")
-print("above recorded 0:00 prediction:", up or "none")
+up = [f"{n} {rec/1e4:.1f}万→{G['now'][n]['pred']/1e4:.1f}万" for n, rec in G.get("pred500", {}).items()
+      if n not in plan["top100"] and n in G["now"] and G["now"][n]["pred"] > rec]
+print("500th prediction above the last 0:00 record:", up or "none")

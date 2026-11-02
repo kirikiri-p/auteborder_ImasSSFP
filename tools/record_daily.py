@@ -1,7 +1,7 @@
 # Usage: python3 tools/record_daily.py "2026-11-02 23:59" ["2026-11-01 23:59"]
-# Records the site's prediction (border at that post x median of past ratios) for every idol, 500th and 100th,
+# Records the site's prediction (tools/model.py: level x this event's 24 h pace) for every idol, 500th and 100th,
 # under goals.json "daily"[time], and prints the idols whose prediction is above the one at the earlier post.
-# Goals and pred500 (the alert baseline) are left as they are.
+# Goals are left as they are; pred500 (the alert baseline) becomes this record.
 import json, statistics as st, sys
 t = sys.argv[1]; prev = sys.argv[2] if len(sys.argv) > 2 else None
 R = json.load(open('data/reference.json')); P = json.load(open('data/points.json'))['20261031-1200_20261106-2059']['idols']
@@ -12,17 +12,18 @@ def ratio(c, p):
         if c[i][0] >= p:
             a, b = c[i-1], c[i]; return a[1] + (b[1]-a[1])*(p-a[0])/(b[0]-a[0]) if b[0] > a[0] else b[1]
     return 1
+sys.path.insert(0, "tools"); import model   # same mixed prediction as the site
 def preds(at):
     out = {}
-    for rk, col in COL.items():
+    for rk in COL:
         out[rk] = {}
         for n, rows in P.items():
-            x = [r for r in rows if r[0] == at]; assert x, (n, at); x = x[0]
-            rs = [v for v in (ratio(z['curve'], x[1]) for z in R['refs'] if z['rank'] == rk) if v]
-            out[rk][n] = round(x[col] * st.median(rs))
+            p, lp = model.pred(rows, rk, upto=at); assert p and lp[0] == at, (n, at)
+            out[rk][n] = round(p)
     return out
 G = json.load(open('data/goals.json', encoding='utf-8')); now = preds(t)
 G.setdefault("daily", {})[t] = now
+G["pred500"] = dict(now["500"])   # the site and merge_export flag a 500th prediction above this
 open('data/goals.json', 'w', encoding='utf-8').write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
 if prev:
     old = G["daily"].get(prev) or preds(prev)

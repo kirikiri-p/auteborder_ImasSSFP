@@ -354,6 +354,23 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     }
     return 1;
   }
+  // mixed prediction (tools/model.py): geometric mean of border x median(final/now) and
+  // border + (border - border 24 h ago) x M(p), M from the past events on data/model.json's 0.5% grid
+  function mgridAt(arr, p) {
+    if (!model || !arr) return null;
+    const g = model.grid; if (p <= g[0]) return arr[0]; if (p >= g[g.length - 1]) return arr[arr.length - 1];
+    const i = Math.floor((p - g[0]) / 0.5), a = arr[i], b = arr[Math.min(i + 1, arr.length - 1)];
+    return a == null || b == null ? (a == null ? b : a) : a + (b - a) * (p - g[i]) / 0.5;
+  }
+  function mixPred(rk, pts, ci, lp, med) {   // pts: this idol's points (any order), lp: the last one used
+    const a = lp[ci] * med;
+    const m = model && model.ranks[rk] && mgridAt(model.ranks[rk].M, lp[1]);
+    if (m == null) return a;
+    const t24 = dkeyTime(jst(lp[0]).getTime() - 24 * 3600000);
+    const old = pts.filter(p => p[0] <= t24 && p[ci] != null).sort((x, y) => x[0] < y[0] ? -1 : 1).pop();
+    if (!old) return a;
+    return Math.sqrt(a * (lp[ci] + Math.max(0, lp[ci] - old[ci]) * m));
+  }
   // ---------- songs ----------
   const songById = id => S.songs.find(s => s.id === id);
   const songOf = (name, mode) => songById((S.songBy[name] || {})[mode]) || songById(S.def[mode]) || S.songs[0];
@@ -410,11 +427,12 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
   }
 
   // ---------- data ----------
-  let points = null, fetched = null, mine = null, fixed = null, ref = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
+  let points = null, fetched = null, mine = null, fixed = null, ref = null, model = null, loadedAt = null, loadErr = null, rows = [], ctx = null, openName = null;
   async function load() {
     try {
       const tasks = [fetch("data/points.json?t=" + Date.now(), { cache: "no-store" }).then(r => { if (!r.ok) throw new Error("points " + r.status); return r.json(); })];
       fetch("data/my.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(m => { if (m) { mine = m; render(); } }).catch(() => {});
+      if (!model) fetch("data/model.json?v=1", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(m => { if (m) { model = m; render(); } }).catch(() => {});
       fetch("data/goals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(g => { fixed = g; render(); }).catch(() => {});
       if (!ref) tasks.push(fetch("data/reference.json?v=4", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
@@ -455,7 +473,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       if (lp[1] >= 99.99) { v.pred = v.border; v.final = true; }
       else if (ref && lp[ci] > 0) {
         const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
-        if (rs.length) { v.rs = rs; v.lo = Math.min(...rs); v.hi = Math.max(...rs); v.med = q(rs, .5); v.pred = v.border * v.med; }
+        if (rs.length) {
+          v.rs = rs; v.lo = Math.min(...rs); v.hi = Math.max(...rs); v.med = q(rs, .5);
+          v.pred = mixPred(rk, pts, ci, lp, v.med);
+          v.adj = v.pred / (v.border * v.med);   // the past-curve band is scaled by the same factor
+        }
       }
     }
     return v;
@@ -488,7 +510,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         if (r.final) r.safe = r.border;
         else if (r.rs) {
           const base = S.basis === "max" ? r.hi : S.basis === "p90" ? q(r.rs, .9) : r.med;
-          r.safe = r.border * base * (1 + (num(S.margin) || 0) / 100);
+          r.safe = r.border * base * (r.adj || 1) * (1 + (num(S.margin) || 0) / 100);
         }
         // goal: the predicted final, or the safe line; "stage" uses the prediction until your score passes it
         const j = S.judge || "stage";
@@ -775,7 +797,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       const xs = [r.pct]; for (let x = Math.floor(r.pct) + 1; x <= 100; x++) xs.push(x);
       for (const x of xs) {
         // each past curve projects: border now x (its ratio to final now) / (its ratio to final at x)
-        const vs = curves.map(c => { const a = ratioAt(c.curve, r.pct), b = ratioAt(c.curve, x); return a && b ? r.border * a / b : null; }).filter(v => v != null);
+        const vs = curves.map(c => { const a = ratioAt(c.curve, r.pct), b = ratioAt(c.curve, x); return a && b ? r.border * a / b * (r.adj || 1) : null; }).filter(v => v != null);
         if (vs.length) band.push([x, Math.min(...vs), q(vs, .5), Math.max(...vs)]);
       }
     }
@@ -872,7 +894,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     const ci = COL[rk], pts = ((ev && ev.idols[name]) || []).filter(p => p[ci] != null && p[0] <= until).sort((a, b) => a[0] < b[0] ? -1 : 1);
     const lp = pts[pts.length - 1]; if (!lp || !ref) return null;
     const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
-    return rs.length ? { at: lp[0], border: lp[ci], pred: lp[1] >= 99.99 ? lp[ci] : lp[ci] * q(rs, .5) } : null;
+    return rs.length ? { at: lp[0], border: lp[ci], pred: lp[1] >= 99.99 ? lp[ci] : mixPred(rk, pts, ci, lp, q(rs, .5)) } : null;
   }
   function renderDay() {
     const ev = ctx && ctx.ev; if (!ev) { $("#dayBody").innerHTML = ""; $("#dayNote").textContent = "イベントが始まると出ます。"; return; }
