@@ -572,6 +572,11 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       $("#updated").textContent = lastT ? `${lastT.slice(5).replace("-", "/")} の記録（${age}分前）` : "";
       if (age != null && age > 45) notes.push(`<div class="notice warn">最新の記録が${age}分前です。止まっているかもしれません。</div>`);
     }
+    // the 500th prediction recorded at 0:00 (data/goals.json pred500): flag idols whose prediction is now above it
+    if (ev && fixed && fixed.pred500) {
+      const up = IDOLS.map(n => { const rec = fixed.pred500[n], p = rec ? predOn(n, "500", ev, "9999") : null; return p && p.pred > rec ? { n, rec, now: p.pred } : null; }).filter(Boolean);
+      if (up.length) notes.push(`<div class="notice warn">${esc(fixed.note ? fixed.note.replace(/×.*/, "") : "記録した")}を上回った500位予測：${up.map(u => `${esc(GIVEN[u.n])} ${man(u.rec)}→<b>${man(u.now)}</b>`).join("、")}</div>`);
+    }
     $("#notice").innerHTML = notes.join("");
 
     const counted = rows.filter(r => r.status !== "off");
@@ -670,6 +675,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         <div class="facts">
           <div><span class="k">今の${rl(r.rk)}</span><span class="v n">${man(r.border)}</span></div>
           <div><span class="k">安全ライン</span><span class="v n safe">${man(r.safe)}</span></div>
+          ${fixed && fixed.pred500 && fixed.pred500[name] ? (() => { const p = predOn(name, "500", ctx.ev, "9999"); return `<div><span class="k">500位予測（記録→今）</span><span class="v n${p && p.pred > fixed.pred500[name] ? " safe" : ""}">${man(fixed.pred500[name])}→${man(p && p.pred)}</span></div>`; })() : ""}
           ${r.goalKind === "fixed" ? `<div><span class="k">目標${r.fixedNote ? `<small>（${esc(r.fixedNote)}）</small>` : ""}</span><span class="v n">${man(r.goal)}</span></div>` : ""}
         </div>
         <div class="myrow"><label for="myIn">自分のスコア${r.myAt ? `<small class="meas">（${esc(r.myAt.slice(5).replace("-", "/"))}）</small>` : ""}</label><input id="myIn" inputmode="numeric" placeholder="例 585万" value="${esc(r.my != null ? full(r.my) : "")}">
