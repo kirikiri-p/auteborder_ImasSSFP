@@ -1,7 +1,7 @@
 """Prediction model shared by merge_export.py and record_daily.py (index.html does the same in JS).
 
 pred = sqrt(A x B), the geometric mean of
-  A  border now x median over past curves of (final / border) at the same elapsed %       (level)
+  A  border now x median over 2.5周年's curves of (final / border) at the same elapsed %  (level; same schedule as now, so the time of day lines up)
   B  border now + (border now - border 24 h ago) x M(p)                                     (this event's pace)
      M(p) = median over past curves of (final - border(p)) / (border(p) - border(p - 24 h)); 24 h in each event's own %
 When there is no post 24 h back, pred = A.
@@ -12,6 +12,7 @@ Past event lengths: 2.5周年 5/9 12:00-5/15 20:59 (152.98 h); 2周年 assumed 1
 import datetime as dt, json, math, os, statistics as st
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOURS = {"2026-05-09": 152.98, "2025-11-01": 128.98}
+LEVEL_EVENT = "2026-05-09"   # level part: only the past event with the same schedule (12:00 start, 20:59 end, 6.4 days), so the clock lines up
 COL = {"1": 2, "12": 3, "50": 4, "100": 5, "500": 6, "10": 7, "SS": 8}
 
 def ratio(c, p):
@@ -86,7 +87,7 @@ def medratio(rk, p):
     global _R
     if (rk, p) in _MR: return _MR[(rk, p)]
     if _R is None: _R = json.load(open(os.path.join(ROOT, "data/reference.json")))
-    rs = [r for r in (ratio(z["curve"], p) for z in _R["refs"] if z["rank"] == rk) if r]
+    rs = [r for r in (ratio(z["curve"], p) for z in _R["refs"] if z["rank"] == rk and z["event"] == LEVEL_EVENT) if r]
     _MR[(rk, p)] = st.median(rs) if rs else None
     return _MR[(rk, p)]
 

@@ -475,7 +475,8 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
         if (rs.length) {
           v.rs = rs; v.lo = Math.min(...rs); v.hi = Math.max(...rs); v.med = q(rs, .5);
-          v.pred = mixPred(rk, pts, ci, lp, v.med);
+          const lv = ref.refs.filter(x => x.rank === rk && x.event === "2026-05-09").map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);   // level: same-schedule event only
+          v.pred = mixPred(rk, pts, ci, lp, lv.length ? q(lv, .5) : v.med);
           v.adj = v.pred / (v.border * v.med);   // the past-curve band is scaled by the same factor
         }
       }
@@ -895,7 +896,8 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
     const ci = COL[rk], pts = ((ev && ev.idols[name]) || []).filter(p => p[ci] != null && p[0] <= until).sort((a, b) => a[0] < b[0] ? -1 : 1);
     const lp = pts[pts.length - 1]; if (!lp || !ref) return null;
     const rs = ref.refs.filter(x => x.rank === rk).map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
-    return rs.length ? { at: lp[0], border: lp[ci], pred: lp[1] >= 99.99 ? lp[ci] : mixPred(rk, pts, ci, lp, q(rs, .5)) } : null;
+    const lv = ref.refs.filter(x => x.rank === rk && x.event === "2026-05-09").map(x => ratioAt(x.curve, lp[1])).filter(x => x != null);
+    return rs.length ? { at: lp[0], border: lp[ci], pred: lp[1] >= 99.99 ? lp[ci] : mixPred(rk, pts, ci, lp, q(lv.length ? lv : rs, .5)) } : null;
   }
   function renderDay() {
     const ev = ctx && ctx.ev; if (!ev) { $("#dayBody").innerHTML = ""; $("#dayNote").textContent = "イベントが始まると出ます。"; return; }
