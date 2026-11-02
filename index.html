@@ -495,8 +495,9 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         r.goalKind = r.pred == null ? "safe" : j === "pred" ? "pred" : j === "safe" ? "safe" : (r.my != null && r.my >= r.pred ? "safe" : "pred");
         r.goal = r.goalKind === "pred" ? r.pred : r.safe;
         // a goal recorded in data/goals.json (e.g. a prediction at a set time, plus a margin) replaces the moving one
-        const fx = fixed && fixed.goals && fixed.goals[name];
-        if (fx > 0 && rk === String(fixed.rank || "500")) { r.goal = fx; r.goalKind = "fixed"; r.fixedNote = fixed.note || ""; }
+        const fxSet = !fixed ? null : rk === "100" ? fixed.goals100 : rk === String(fixed.rank || "500") ? fixed.goals : null;
+        const fx = fxSet && fxSet[name];
+        if (fx > 0) { r.goal = fx; r.goalKind = "fixed"; r.fixedNote = (rk === "100" ? fixed.note100 : fixed.note) || ""; }
         if (r.goal != null) r.need = Math.max(0, r.goal - (r.my || 0));
       }
       return r;

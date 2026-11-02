@@ -55,6 +55,18 @@ if rule:
         if round(best[0]) > G["pred500"].get(n, 0): G["pred500"][n] = round(best[0])
     open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
     print("goals raised (max prediction since %s x%s):" % (rule["since"], rule["factor"]), raised or "none")
+# 100th goals (goals.json "rule100"): running max of the 100th prediction since rule100.since x factor
+# (factor_late for posts from late_from on), never lowered.
+r1 = G.get("rule100")
+if r1:
+    def pred100(row): return row[5] * st.median([x for x in (ratio(z["curve"], row[1]) for z in R["refs"] if z["rank"] == "100") if x])
+    for n in r1["idols"]:
+        cands = [(pred100(r) * (r1["factor_late"] if r[0] >= r1["late_from"] else r1["factor"]), r[0]) for r in ev[n] if r[0] >= r1["since"] and r[5]]
+        if not cands: continue
+        g, at = max(cands); g = round(g); G.setdefault("goals100", {})
+        if g > G["goals100"].get(n, 0): G["goals100"][n] = g
+        print(f"100th goal {n}: {G['goals100'][n]/1e4:.1f}万 (now {my[n]/1e4:.1f}万, " + (f"あと{(G['goals100'][n]-my[n])/1e4:.1f}万)" if my[n] < G['goals100'][n] else "reached)"))
+    open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
 left = {n: g - my[n] for n, g in G["goals"].items() if g > my[n]}
 print("500 goals open: %.1f万" % (sum(left.values()) / 1e4), {n: round(v / 1e4, 1) for n, v in sorted(left.items(), key=lambda x: -x[1])})
 up = []
