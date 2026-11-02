@@ -2,7 +2,7 @@
 
   python3 tools/merge_export.py --borders exp.txt          # lines from __export(): name|MMDDHHMM,1,12,50,100,500,10,SS;...
   python3 tools/merge_export.py --my "2026-11-02 14:37" scores.json   # {"幽谷霧子": 2342960, ...} (all 28)
-Prints what changed, the 500th goals still open (data/goals.json) and idols whose 500th prediction is now above
+Prints what changed, raises 500th goals by goals.json "rule" (running max of the prediction x factor), the goals still open and idols whose 500th prediction is now above
 the recorded 0:00 one (pred500). Commit and push afterwards.
 """
 import argparse, datetime as dt, json, os, statistics as st, sys
@@ -39,10 +39,26 @@ def ratio(c, p):
         if c[i][0] >= p:
             x, y = c[i-1], c[i]; return x[1] + (y[1]-x[1])*(p-x[0])/(y[0]-x[0]) if y[0] > x[0] else y[1]
     return 1
+def pred500(row): return row[6] * st.median([x for x in (ratio(z["curve"], row[1]) for z in R["refs"] if z["rank"] == "500") if x])
+# Running-max rule (goals.json "rule"): from rule.since on, a 500th goal is the highest prediction seen so far x factor,
+# never lowered. pred500 follows the running max, so the "above" list below only shows a new high.
+rule = G.get("rule")
+if rule:
+    raised = []
+    for n in G["goals"]:
+        if n in rule.get("skip", []): continue
+        best = max(((pred500(r), r[0]) for r in ev[n] if r[0] >= rule["since"] and r[6]), default=None)
+        if not best: continue
+        G.setdefault("maxpred", {})[n] = [round(best[0]), best[1]]
+        g = round(best[0] * rule["factor"])
+        if g > G["goals"][n]: raised.append(f"{n} {G['goals'][n]/1e4:.1f}万→{g/1e4:.1f}万"); G["goals"][n] = g
+        if round(best[0]) > G["pred500"].get(n, 0): G["pred500"][n] = round(best[0])
+    open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
+    print("goals raised (max prediction since %s x%s):" % (rule["since"], rule["factor"]), raised or "none")
 left = {n: g - my[n] for n, g in G["goals"].items() if g > my[n]}
 print("500 goals open: %.1f万" % (sum(left.values()) / 1e4), {n: round(v / 1e4, 1) for n, v in sorted(left.items(), key=lambda x: -x[1])})
 up = []
 for n, rec in G.get("pred500", {}).items():
     lp = ev[n][-1]; p = lp[6] * st.median([x for x in (ratio(z["curve"], lp[1]) for z in R["refs"] if z["rank"] == "500") if x])
-    if p > rec: up.append(f"{n} {rec/1e4:.1f}万→{p/1e4:.1f}万")
+    if round(p) > rec and n not in (rule or {}).get("skip", []): up.append(f"{n} {rec/1e4:.1f}万→{p/1e4:.1f}万")
 print("above recorded 0:00 prediction:", up or "none")
