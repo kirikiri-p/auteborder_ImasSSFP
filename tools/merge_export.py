@@ -43,7 +43,7 @@ for n in ev:
     rk = "100" if n in plan["top100"] else "500"
     p, lp = model.pred(ev[n], rk)
     if p is None: continue
-    mg = model.margin(rk, plan.get("margin_at", lp[1])); g = round(p * mg); key = "goals100" if rk == "100" else "goals"
+    mg = plan["factor"] if plan.get("factor") else model.margin(rk, plan.get("margin_at", lp[1])); g = round(p * mg); key = "goals100" if rk == "100" else "goals"   # plan.factor: fixed multiplier (11/4 19:40~: x1.2)
     old = G[key].get(n)
     if lp[0] >= plan["lock_from"] and old and G.get("locked", {}).get(n) and old > g: g = old
     if lp[0] >= plan["lock_from"]: G.setdefault("locked", {})[n] = True
