@@ -38,6 +38,7 @@ import model   # tools/model.py: mixed prediction (level x this event's 24 h pac
 # since the prediction itself is redone on every update. "reserve" = prediction x m90 at the elapsed % now (worst case).
 # Before plan.lock_from (the last day) a goal follows the prediction up and down; from then on it is never lowered.
 plan = G["plan"]; G.setdefault("goals100", {}); G["now"] = {}
+prev = {k: dict(G.get(k, {})) for k in ("goals", "goals100")}
 changed = []
 for n in ev:
     rk = "100" if n in plan["top100"] else "500"
@@ -56,6 +57,16 @@ for n in ev:
         v, br = model.safe_line(ev[n], rk)
         if v: G["safe"].setdefault(n, {})[rk] = v
         if br and rk in ("100", "500") and (rk == "100") == (n in plan["top100"]): broken.append(f"{n} {rk}位")
+if plan.get("goal") == "safe":   # 11/5 21:10~: goal = the safe line itself (still never lowered from plan.lock_from)
+    changed = []
+    for n in ev:
+        if n not in G["now"]: continue
+        rk = G["now"][n]["rank"]; key = "goals100" if rk == "100" else "goals"; g = G["safe"].get(n, {}).get(rk)
+        if not g: continue
+        old = prev[key].get(n)
+        if G["now"][n]["at"] >= plan["lock_from"] and old and G.get("locked", {}).get(n) and old > g: g = old
+        G[key][n] = g; G["now"][n]["margin"] = round(g / G["now"][n]["pred"], 3)
+        if old and abs(g - old) >= 5000: changed.append(f"{n} {old/1e4:.1f}万→{g/1e4:.1f}万")
 open("data/goals.json", "w", encoding="utf-8").write(json.dumps(G, ensure_ascii=False, indent=1) + "\n")
 print("safe line went up (prediction ran past the past events):", broken or "none")
 print("goals changed:", changed or "none")
