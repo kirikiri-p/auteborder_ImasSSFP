@@ -41,10 +41,10 @@ plan = G["plan"]; G.setdefault("goals100", {}); G["now"] = {}
 prev = {k: dict(G.get(k, {})) for k in ("goals", "goals100")}
 changed = []
 for n in ev:
-    rk = "100" if n in plan["top100"] else "500"
+    rk = plan.get("rank_of", {}).get(n) or ("100" if n in plan["top100"] else "500")   # 11/6 20:22~: 霧子・果穂 = 50位
     p, lp = model.pred(ev[n], rk)
     if p is None: continue
-    mg = plan["factor"] if plan.get("factor") else model.margin(rk, plan.get("margin_at", lp[1])); g = round(p * mg); key = "goals100" if rk == "100" else "goals"   # plan.factor: fixed multiplier (11/4 19:40~: x1.2)
+    mg = plan["factor"] if plan.get("factor") else model.margin(rk, plan.get("margin_at", lp[1])); g = round(p * mg); key = "goals" if rk == "500" else "goals100"   # plan.factor: fixed multiplier (11/4 19:40~: x1.2)
     old = G[key].get(n)
     if lp[0] >= plan["lock_from"] and old and G.get("locked", {}).get(n) and old > g: g = old
     if lp[0] >= plan["lock_from"]: G.setdefault("locked", {})[n] = True
@@ -56,12 +56,12 @@ for n in ev:
     for rk in ("1", "10", "50", "100", "500"):
         v, br = model.safe_line(ev[n], rk)
         if v: G["safe"].setdefault(n, {})[rk] = v
-        if br and rk in ("100", "500") and (rk == "100") == (n in plan["top100"]): broken.append(f"{n} {rk}位")
+        if br and rk == (plan.get("rank_of", {}).get(n) or ("100" if n in plan["top100"] else "500")): broken.append(f"{n} {rk}位")
 if plan.get("goal") == "safe":   # 11/5 21:10~: goal = the safe line itself, always (11/6 1:43~ also after plan.lock_from)
     changed = []
     for n in ev:
         if n not in G["now"]: continue
-        rk = G["now"][n]["rank"]; key = "goals100" if rk == "100" else "goals"; g = G["safe"].get(n, {}).get(rk)
+        rk = G["now"][n]["rank"]; key = "goals" if rk == "500" else "goals100"; g = G["safe"].get(n, {}).get(rk)
         if not g: continue
         old = prev[key].get(n)
         G[key][n] = g; G["now"][n]["margin"] = round(g / G["now"][n]["pred"], 3)
