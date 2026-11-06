@@ -17,7 +17,7 @@
   --paper:rgba(255,255,255,.86); --solid:#fff; --field:#f3f9fd;
   --prism:linear-gradient(to right,#b4e6fa 0,#f1deff 25%,#f5bde5 50%,#f1deff 75%,#b4e6fa 100%);
   --no:#cf3f63; --no-bg:#fff0f4; --plan:#45709e; --ok:#1f9a8a; --ok-bg:#effaf8; --hit:#6b8f14; --hit-bg:#f4f9e4; --near:#b7791f; --near-bg:#fdf6e7; --wait:#a9bacb;
-  --s1:#2f6fc0; --s2:#e2708c; --s3:#2a9d8f;
+  --s1:#2f6fc0; --s2:#e2708c; --s3:#2a9d8f; --s4:#c08a1e;
   --jp:"Humming B","FOT-ハミング Std B","ハミング Std B","Zen Maru Gothic","Hiragino Maru Gothic ProN",sans-serif;
   --en:"Raleway","Humming B","Zen Maru Gothic",sans-serif;
   --serif:"Noto Serif JP","Hiragino Mincho ProN",serif;
@@ -434,7 +434,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       fetch("data/my.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(m => { if (m) { mine = m; render(); } }).catch(() => {});
       if (!model) fetch("data/model.json?v=1", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(m => { if (m) { model = m; render(); } }).catch(() => {});
       fetch("data/goals.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.ok ? r.json() : null).then(g => { fixed = g; render(); }).catch(() => {});
-      if (!ref) tasks.push(fetch("data/reference.json?v=4", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
+      if (!ref) tasks.push(fetch("data/reference.json?v=5", { cache: "force-cache" }).then(r => { if (!r.ok) throw new Error("reference " + r.status); return r.json(); }));
       const [p, r] = await Promise.all(tasks);
       fetched = p; points = withImports(p); if (r) ref = r; loadedAt = Date.now(); loadErr = null;
     } catch (e) { loadErr = e.message || String(e); }
@@ -719,7 +719,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
         <p class="split">${rl(vr)}${v.pct != null ? `（${v.pct.toFixed(1)}%）` : ""}の予測の幅 <b class="n">${v.lo != null ? `${man(v.border * v.lo)}〜${man(v.border * v.hi)}` : v.final ? "確定" : "—"}</b>${v.lo != null ? `（${xr(v.lo)}〜${v.hi.toFixed(2)}）` : ""}</p>
         <div class="legend">
           <span style="color:var(--s1)"><i></i>今回</span><span style="color:var(--s2)"><i style="border-top-style:dashed"></i>2.5周年</span>
-          <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span>
+          <span style="color:var(--s3)"><i style="border-top-style:dotted"></i>2周年</span><span style="color:var(--s4)"><i style="border-top-style:dashed"></i>3周年</span>
           <span style="color:var(--s1)"><i style="border-top:9px solid;opacity:.2"></i>予測の幅</span>
           ${same ? `<span><i style="border-top-style:dashed;color:var(--no)"></i>安全ライン</span>${r.my ? `<span><i style="color:var(--ink);border-top-style:dotted"></i>自分</span>` : ""}` : ""}
         </div>
@@ -816,6 +816,7 @@ table.ov td:first-child{border-left:3px solid var(--u,#888);padding-left:8px}
       s += `<path d="${band.map((b, i) => (i ? "L" : "M") + sx(b[0]).toFixed(1) + "," + sy(b[3]).toFixed(1)).join("")}${[...band].reverse().map(b => "L" + sx(b[0]).toFixed(1) + "," + sy(b[1]).toFixed(1)).join("")}Z" fill="var(--s1)" opacity=".16"/>`;
       s += `<path d="${path(band.map(b => [b[0], b[2]]))}" fill="none" stroke="var(--s1)" stroke-width="1.5" stroke-dasharray="2 3"/>`;
     }
+    if (past[2] && past[2].length) s += `<path d="${path(past[2])}" fill="none" stroke="var(--s4)" stroke-width="2" stroke-dasharray="8 2 2 2"/>`;
     if (past[1] && past[1].length) s += `<path d="${path(past[1])}" fill="none" stroke="var(--s3)" stroke-width="2" stroke-dasharray="1 3" stroke-linecap="round"/>`;
     if (past[0] && past[0].length) s += `<path d="${path(past[0])}" fill="none" stroke="var(--s2)" stroke-width="2" stroke-dasharray="5 3"/>`;
     if (r.safe) s += `<line x1="${L}" x2="${W - R}" y1="${sy(r.safe)}" y2="${sy(r.safe)}" stroke="var(--no)" stroke-width="1.2" stroke-dasharray="5 4"/><text x="${L + 3}" y="${sy(r.safe) - 3}" style="fill:var(--no)">安全 ${man(r.safe)}</text>`;
